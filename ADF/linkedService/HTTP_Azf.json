@@ -1,0 +1,12 @@
+{
+	"name": "HTTP_Azf",
+	"properties": {
+		"annotations": [],
+		"type": "HttpServer",
+		"typeProperties": {
+			"url": "https://powersaturdayazf.azurewebsites.net",
+			"enableServerCertificateValidation": true,
+			"authenticationType": "Anonymous"
+		}
+	}
+}
