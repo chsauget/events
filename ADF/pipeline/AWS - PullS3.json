@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Web - Get Secret",
+				"name": "Web - Vault - awsConnectionBody",
 				"type": "WebActivity",
 				"dependsOn": [],
 				"policy": {
@@ -25,12 +25,83 @@
 						"resource": "https://vault.azure.net"
 					}
 				}
+			},
+			{
+				"name": "LKP - S3 Files",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Web - Vault - awsConnectionBody",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Web - Get Bearer",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "HttpSource",
+						"httpRequestTimeout": "00:01:40"
+					},
+					"dataset": {
+						"referenceName": "HTTP_Glue_Catalog",
+						"type": "DatasetReference",
+						"parameters": {
+							"awsConnectionBody": {
+								"value": "@activity('Web - Vault - awsConnectionBody').output.value",
+								"type": "Expression"
+							},
+							"bearer": {
+								"value": "@activity('WEB - Get Bearer').output.Response",
+								"type": "Expression"
+							},
+							"awsDatabase": {
+								"value": "@pipeline().parameters.awsDatabase",
+								"type": "Expression"
+							}
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "Web - Get Bearer",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.00:01:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 60,
+					"secureOutput": true,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": "https://powersaturdayazf.azurewebsites.net/api/GetBearerFromMSI/a14e9acb-eebb-4cba-a746-44306e8e7c9f"
+				}
 			}
 		],
 		"parameters": {
 			"KeyVaultUrl": {
 				"type": "string",
 				"defaultValue": "https://powersaturdayakv.vault.azure.net/"
+			},
+			"awsDatabase": {
+				"type": "string",
+				"defaultValue": "co2impact"
 			}
 		},
 		"annotations": []
