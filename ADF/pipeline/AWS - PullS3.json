@@ -138,8 +138,54 @@
 										"enablePartitionDiscovery": false
 									}
 								},
+								"sink": {
+									"type": "AzureSqlSink",
+									"preCopyScript": {
+										"value": "@{concat('IF(OBJECT_ID(''dbo.'\n,item().name\n,''') IS NOT NULL)\nBEGIN\n\tTRUNCATE TABLE dbo.'\n,item().name\n,' END'\n)}",
+										"type": "Expression"
+									},
+									"tableOption": "autoCreate",
+									"disableMetricsCollection": false
+								},
 								"enableStaging": true
-							}
+							},
+							"inputs": [
+								{
+									"referenceName": "S3_Parquet",
+									"type": "DatasetReference",
+									"parameters": {
+										"S3Bucket": {
+											"value": "@split(\nreplace(item().StorageDescriptor.Location,'s3://','')\n,'/')[0]",
+											"type": "Expression"
+										},
+										"S3Path": {
+											"value": "@replace(\nitem().StorageDescriptor.Location\n,concat('s3://'\n\t\t,split(\n\t\t\treplace(item().StorageDescriptor.Location,'s3://','')\n\t\t\t,'/')[0]\n\t\t)\n,'')",
+											"type": "Expression"
+										},
+										"S3AccessKeyId": {
+											"value": "@json(activity('Web - Vault - awsConnectionBody').output.value).awsAccessKeyId",
+											"type": "Expression"
+										},
+										"S3SecretAccessKey": {
+											"value": "@json(activity('Web - Vault - awsConnectionBody').output.value).awsSecretAccessKey",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "SQL_Generic",
+									"type": "DatasetReference",
+									"parameters": {
+										"TableName": {
+											"value": "@item().name",
+											"type": "Expression"
+										},
+										"TableSchema": "dbo"
+									}
+								}
+							]
 						}
 					]
 				}
