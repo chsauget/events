@@ -1,0 +1,38 @@
+{
+	"name": "AWS - PullS3",
+	"properties": {
+		"activities": [
+			{
+				"name": "Web - Get Secret",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.00:01:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 60,
+					"secureOutput": true,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": {
+						"value": "@concat(pipeline().parameters.KeyVaultUrl\n,'/secrets/S3ConnectionBody?api-version=7.0'\n)",
+						"type": "Expression"
+					},
+					"method": "GET",
+					"authentication": {
+						"type": "MSI",
+						"resource": "https://vault.azure.net"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"KeyVaultUrl": {
+				"type": "string",
+				"defaultValue": "https://powersaturdayakv.vault.azure.net/"
+			}
+		},
+		"annotations": []
+	}
+}
