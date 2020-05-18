@@ -107,7 +107,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Filter - Selected Tables').output.Value",
+						"value": "@activity('LKP - S3 Files').output.Value",
 						"type": "Expression"
 					},
 					"isSequential": false,
