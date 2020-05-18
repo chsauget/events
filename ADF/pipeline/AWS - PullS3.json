@@ -92,6 +92,57 @@
 				"typeProperties": {
 					"url": "https://powersaturdayazf.azurewebsites.net/api/GetBearerFromMSI/a14e9acb-eebb-4cba-a746-44306e8e7c9f"
 				}
+			},
+			{
+				"name": "ForEach - Tables",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "LKP - S3 Files",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Filter - Selected Tables').output.Value",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"activities": [
+						{
+							"name": "Copy - AWS - Azure",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": true
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ParquetSource",
+									"storeSettings": {
+										"type": "AmazonS3ReadSettings",
+										"recursive": true,
+										"wildcardFolderPath": {
+											"value": "@{replace(\nitem().StorageDescriptor.Location\n,concat('s3://'\n\t\t,split(\n\t\t\treplace(item().StorageDescriptor.Location,'s3://','')\n\t\t\t,'/')[0]\n\t\t)\n,'')}",
+											"type": "Expression"
+										},
+										"wildcardFileName": "*",
+										"enablePartitionDiscovery": false
+									}
+								},
+								"enableStaging": true
+							}
+						}
+					]
+				}
 			}
 		],
 		"parameters": {
