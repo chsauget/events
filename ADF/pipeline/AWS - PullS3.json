@@ -90,7 +90,8 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"url": "https://powersaturdayazf.azurewebsites.net/api/GetBearerFromMSI/a14e9acb-eebb-4cba-a746-44306e8e7c9f"
+					"url": "https://powersaturdayazf.azurewebsites.net/api/GetBearerFromMSI/a14e9acb-eebb-4cba-a746-44306e8e7c9f",
+					"method": "GET"
 				}
 			},
 			{
@@ -147,7 +148,7 @@
 									"tableOption": "autoCreate",
 									"disableMetricsCollection": false
 								},
-								"enableStaging": true
+								"enableStaging": false
 							},
 							"inputs": [
 								{

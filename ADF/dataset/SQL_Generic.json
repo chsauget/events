@@ -1,6 +1,10 @@
 {
 	"name": "SQL_Generic",
 	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SQL_PowerSat",
+			"type": "LinkedServiceReference"
+		},
 		"parameters": {
 			"TableName": {
 				"type": "string"

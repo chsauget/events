@@ -1,6 +1,10 @@
 {
 	"name": "HTTP_Glue_Catalog",
 	"properties": {
+		"linkedServiceName": {
+			"referenceName": "HTTP_Azf",
+			"type": "LinkedServiceReference"
+		},
 		"parameters": {
 			"awsConnectionBody": {
 				"type": "object"
