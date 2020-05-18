@@ -90,11 +90,11 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"url": "https://powersaturdayazf.azurewebsites.net/api/GetBearerFromMSI/a14e9acb-eebb-4cba-a746-44306e8e7c9f",
+					"url": "https://powersaturdayazf.azurewebsites.net/api/GetBearerFromMSI/c6beb898-053a-4bd7-aaf2-bf0a38440568",
 					"method": "GET",
 					"authentication": {
 						"type": "MSI",
-						"resource": "a14e9acb-eebb-4cba-a746-44306e8e7c9f"
+						"resource": "c6beb898-053a-4bd7-aaf2-bf0a38440568"
 					}
 				}
 			},
