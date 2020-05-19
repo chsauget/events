@@ -146,7 +146,7 @@
 								"sink": {
 									"type": "AzureSqlSink",
 									"preCopyScript": {
-										"value": "@{concat('IF(OBJECT_ID(''dbo.'\n,item().name\n,''') IS NOT NULL)\nBEGIN\n\tTRUNCATE TABLE dbo.'\n,item().name\n,' END'\n)}",
+										"value": "@{concat('IF(OBJECT_ID(''dbo.'\n,item().name\n,''') IS NOT NULL)\nBEGIN\n\tTRUNCATE TABLE [dbo].['\n,item().name\n,'] END'\n)}",
 										"type": "Expression"
 									},
 									"tableOption": "autoCreate",
@@ -204,6 +204,11 @@
 			"awsDatabase": {
 				"type": "string",
 				"defaultValue": "co2impact"
+			}
+		},
+		"variables": {
+			"test": {
+				"type": "String"
 			}
 		},
 		"annotations": []
