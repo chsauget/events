@@ -904,9 +904,6 @@
 				"type": "String"
 			}
 		},
-		"folder": {
-			"name": "Analysis Services"
-		},
 		"annotations": []
 	}
 }
