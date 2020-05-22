@@ -1,5 +1,5 @@
 {
-	"name": "dataflow1",
+	"name": "DF_SatelliteDatas",
 	"properties": {
 		"type": "MappingDataFlow",
 		"typeProperties": {
@@ -9,12 +9,12 @@
 						"referenceName": "S3_Parquet",
 						"type": "DatasetReference"
 					},
-					"name": "source1"
+					"name": "SatelliteCo2"
 				}
 			],
 			"sinks": [],
 			"transformations": [],
-			"script": "source(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> source1"
+			"script": "source(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> SatelliteCo2"
 		}
 	}
 }
