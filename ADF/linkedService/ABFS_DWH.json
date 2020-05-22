@@ -1,0 +1,10 @@
+{
+	"name": "ABFS_DWH",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "https://hackathondbk.dfs.core.windows.net"
+		}
+	}
+}
