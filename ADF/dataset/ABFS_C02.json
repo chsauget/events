@@ -1,0 +1,89 @@
+{
+	"name": "ABFS_C02",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ABFS_DWH",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "satellite-carbon-dioxide/parquet",
+				"fileSystem": "datasets"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": [
+			{
+				"name": "latitude",
+				"type": "FLOAT"
+			},
+			{
+				"name": "longitude",
+				"type": "FLOAT"
+			},
+			{
+				"name": "solar_zenith_angle",
+				"type": "FLOAT"
+			},
+			{
+				"name": "sensor_zenith_angle",
+				"type": "FLOAT"
+			},
+			{
+				"name": "co2",
+				"type": "FLOAT"
+			},
+			{
+				"name": "co2_uncertainty",
+				"type": "FLOAT"
+			},
+			{
+				"name": "co2_averaging_kernel",
+				"type": "FLOAT"
+			},
+			{
+				"name": "pressure_levels",
+				"type": "FLOAT"
+			},
+			{
+				"name": "pressure_weight",
+				"type": "FLOAT"
+			},
+			{
+				"name": "layer_dim",
+				"type": "INT64"
+			},
+			{
+				"name": "level_dim",
+				"type": "INT64"
+			},
+			{
+				"name": "sounding_dim",
+				"type": "INT64"
+			},
+			{
+				"name": "datetime",
+				"type": "INT64"
+			},
+			{
+				"name": "co2_quality_flag_int",
+				"type": "INT32"
+			},
+			{
+				"name": "filename",
+				"type": "UTF8"
+			},
+			{
+				"name": "year",
+				"type": "UTF8"
+			},
+			{
+				"name": "month",
+				"type": "UTF8"
+			}
+		]
+	}
+}
