@@ -139,7 +139,7 @@
 											"value": "@{replace(\nitem().StorageDescriptor.Location\n,concat('s3://'\n\t\t,split(\n\t\t\treplace(item().StorageDescriptor.Location,'s3://','')\n\t\t\t,'/')[0]\n\t\t)\n,'')}",
 											"type": "Expression"
 										},
-										"wildcardFileName": "*",
+										"wildcardFileName": "*.parquet",
 										"enablePartitionDiscovery": false
 									}
 								},
