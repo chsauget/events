@@ -1,0 +1,60 @@
+{
+	"name": "pipeline1",
+	"properties": {
+		"activities": [
+			{
+				"name": "DF_SatelliteDatas",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "EP - AWS - PullS3 - co2impact",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "DF_SatelliteDatas",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"sink1": {
+								"TableName": "SatelliteData",
+								"TableSchema": "dbo"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					}
+				}
+			},
+			{
+				"name": "EP - AWS - PullS3 - co2impact",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "AWS - PullS3",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"KeyVaultUrl": ""
+					}
+				}
+			}
+		],
+		"annotations": []
+	}
+}
