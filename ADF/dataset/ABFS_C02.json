@@ -13,9 +13,8 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": "00269d092c5a44f593383adb669767d3.parquet",
-				"folderPath": "satellite-carbon-dioxide/parquet2/year=2013/month=10",
-				"fileSystem": "datasets"
+				"folderPath": "export/satellite_carbon_dioxide.parquet",
+				"fileSystem": "datawarehouse"
 			},
 			"compressionCodec": "snappy"
 		},
@@ -78,14 +77,6 @@
 			},
 			{
 				"name": "filename",
-				"type": "UTF8"
-			},
-			{
-				"name": "year",
-				"type": "UTF8"
-			},
-			{
-				"name": "month",
 				"type": "UTF8"
 			}
 		]
