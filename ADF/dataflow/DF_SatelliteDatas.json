@@ -18,7 +18,7 @@
 						"referenceName": "SQL_Generic",
 						"type": "DatasetReference"
 					},
-					"name": "sink1"
+					"name": "DestDimAnalyticsAxis"
 				}
 			],
 			"transformations": [
@@ -32,7 +32,7 @@
 					"name": "AggDistinctCoumns"
 				}
 			],
-			"script": "source(output(\n\t\tlatitude as float,\n\t\tlongitude as float,\n\t\tsolar_zenith_angle as float,\n\t\tsensor_zenith_angle as float,\n\t\tco2 as float,\n\t\tco2_uncertainty as float,\n\t\tco2_averaging_kernel as float,\n\t\tpressure_levels as float,\n\t\tpressure_weight as float,\n\t\tlayer_dim as long,\n\t\tlevel_dim as long,\n\t\tsounding_dim as long,\n\t\tdatetime as long,\n\t\tco2_quality_flag_int as integer,\n\t\tfilename as string,\n\t\tyear as string,\n\t\tmonth as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> SatelliteCo2\nSatelliteCo2 filter({year}=='2016') ~> FilterYear\nFilterYear select(mapColumn(\n\t\tlatitude,\n\t\tlongitude,\n\t\tsolar_zenith_angle,\n\t\tsensor_zenith_angle,\n\t\tlayer_dim,\n\t\tlevel_dim,\n\t\tsounding_dim\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectDimColumns\nSelectDimColumns aggregate(groupBy(latitude,\n\t\tlongitude),\n\teach(match(!in(['latitude','longitude'],name)), $$ = first($$))) ~> AggDistinctCoumns\nAggDistinctCoumns sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> sink1"
+			"script": "source(output(\n\t\tlatitude as float,\n\t\tlongitude as float,\n\t\tsolar_zenith_angle as float,\n\t\tsensor_zenith_angle as float,\n\t\tco2 as float,\n\t\tco2_uncertainty as float,\n\t\tco2_averaging_kernel as float,\n\t\tpressure_levels as float,\n\t\tpressure_weight as float,\n\t\tlayer_dim as long,\n\t\tlevel_dim as long,\n\t\tsounding_dim as long,\n\t\tdatetime as long,\n\t\tco2_quality_flag_int as integer,\n\t\tfilename as string,\n\t\tyear as string,\n\t\tmonth as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> SatelliteCo2\nSatelliteCo2 filter({year}=='2016') ~> FilterYear\nFilterYear select(mapColumn(\n\t\tlatitude,\n\t\tlongitude,\n\t\tsolar_zenith_angle,\n\t\tsensor_zenith_angle,\n\t\tlayer_dim,\n\t\tlevel_dim,\n\t\tsounding_dim\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectDimColumns\nSelectDimColumns aggregate(groupBy(latitude,\n\t\tlongitude),\n\teach(match(!in(['latitude','longitude'],name)), $$ = first($$))) ~> AggDistinctCoumns\nAggDistinctCoumns sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> DestDimAnalyticsAxis"
 		}
 	}
 }

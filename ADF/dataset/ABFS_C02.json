@@ -5,6 +5,9 @@
 			"referenceName": "ABFS_DWH",
 			"type": "LinkedServiceReference"
 		},
+		"folder": {
+			"name": "ABFS"
+		},
 		"annotations": [],
 		"type": "Parquet",
 		"typeProperties": {
