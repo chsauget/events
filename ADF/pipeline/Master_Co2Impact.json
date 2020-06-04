@@ -53,6 +53,34 @@
 						"KeyVaultUrl": ""
 					}
 				}
+			},
+			{
+				"name": "EP - Process SSAS",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "EP - AWS - PullS3 - co2impact",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "Azure Analysis Services - Process",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"SubscriptionId": "9caff34b-9c30-4dbb-8f87-b3816b522b9c",
+						"ResourceGroup": "PowerSaturday",
+						"Region": "northeurope",
+						"ServerName": "powersat",
+						"TSMLProcess": "{\"type\":\"full\"}",
+						"DatabaseName": "PowerSat"
+					}
+				}
 			}
 		],
 		"annotations": []
