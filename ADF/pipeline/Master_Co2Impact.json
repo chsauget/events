@@ -5,7 +5,14 @@
 			{
 				"name": "DF_SatelliteDatas",
 				"type": "ExecuteDataFlow",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "EP - AWS - PullS3 - co2impact",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "7.00:00:00",
 					"retry": 0,
@@ -34,14 +41,7 @@
 			{
 				"name": "EP - AWS - PullS3 - co2impact",
 				"type": "ExecutePipeline",
-				"dependsOn": [
-					{
-						"activity": "DF_SatelliteDatas",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"dependsOn": [],
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
@@ -59,7 +59,7 @@
 				"type": "ExecutePipeline",
 				"dependsOn": [
 					{
-						"activity": "EP - AWS - PullS3 - co2impact",
+						"activity": "DF_SatelliteDatas",
 						"dependencyConditions": [
 							"Succeeded"
 						]
