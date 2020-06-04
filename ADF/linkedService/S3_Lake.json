@@ -1,0 +1,21 @@
+{
+	"name": "S3_Lake",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"type": "AmazonS3",
+		"annotations": [],
+		"typeProperties": {
+			"serviceUrl": "",
+			"accessKeyId": "@{linkedService().S3AccessKeyId}",
+			"secretAccessKey": "@{linkedService().S3SecretAccessKey}"
+		},
+		"parameters": {
+			"S3AccessKeyId": {
+				"type": "String"
+			},
+			"S3SecretAccessKey": {
+				"type": "String"
+			}
+		}
+	}
+}

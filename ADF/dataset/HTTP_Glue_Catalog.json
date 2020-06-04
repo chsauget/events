@@ -1,0 +1,52 @@
+{
+	"name": "HTTP_Glue_Catalog",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "HTTP_Azf",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"awsConnectionBody": {
+				"type": "object"
+			},
+			"bearer": {
+				"type": "string",
+				"defaultValue": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IllNRUxIVDBndmIwbXhvU0RvWWZvbWpxZmpZVSIsImtpZCI6IllNRUxIVDBndmIwbXhvU0RvWWZvbWpxZmpZVSJ9.eyJhdWQiOiJmOTRiZWZkYi0xMmJkLTRkZmItYTMwOS1kZWYxYjZiYzM3ZGEiLCJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC9iMmVkNDY2Yi0xYWQ1LTRlYTUtYjE5ZS0xMGYyYWJjNDFlN2MvIiwiaWF0IjoxNTg2OTQxNTYwLCJuYmYiOjE1ODY5NDE1NjAsImV4cCI6MTU4NzAyODI2MCwiYWlvIjoiNDJkZ1lEQjV4T3g1MDUvcjdReExvWTdEU2F1OUFRPT0iLCJhcHBpZCI6IjJhMGE2MmFmLTdiMTItNDlkOC05MzllLTM0M2U3OGRmMjIwMCIsImFwcGlkYWNyIjoiMiIsImlkcCI6Imh0dHBzOi8vc3RzLndpbmRvd3MubmV0L2IyZWQ0NjZiLTFhZDUtNGVhNS1iMTllLTEwZjJhYmM0MWU3Yy8iLCJvaWQiOiJiZWIwNzRlYi0xYWQxLTQ5YzktYmU4ZC1kZWY5MmEyZWUzNTQiLCJzdWIiOiJiZWIwNzRlYi0xYWQxLTQ5YzktYmU4ZC1kZWY5MmEyZWUzNTQiLCJ0aWQiOiJiMmVkNDY2Yi0xYWQ1LTRlYTUtYjE5ZS0xMGYyYWJjNDFlN2MiLCJ1dGkiOiJXc3dLR0MzcXNFaUhOa1BIOGlVTUFBIiwidmVyIjoiMS4wIn0.g6ENxAbaxpe7_Jk79fqw3F1PZki6FhMiz6o6h8IdF39fkIq1cWlDzfmddk0gjTc8959gC02lGJ7RSCk_Z0-Fl9ybAMCuPYhwFG1iDN6As5R3oT1LUuc8oIhfahiG48f_kwX8dWihmmT70e4lHW3PlAoR_v2iRxPMjYbeTMUt64bQFtKl7TeXmW0DuIrwDh4cpdEwiJa0qqwd1Hcrxms0kh9cotxUgFLm_rrypfLlDPnLi9hwZqPEPLj8iK46KDBfOFMsIXssSvx81Abpv1cFXXjlt1boBMkUNu3hmhT7s5JuaeTjDwyibl9MJTCKhz64lhLrfKIAb6P2P9vYjfMsDA"
+			},
+			"awsDatabase": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "AWS Lake"
+		},
+		"annotations": [],
+		"type": "HttpFile",
+		"typeProperties": {
+			"format": {
+				"type": "JsonFormat",
+				"filePattern": "arrayOfObjects",
+				"jsonPathDefinition": {
+					"Name": "$.['Name']",
+					"StorageDescriptor.Location": "$.['StorageDescriptor']['Location']"
+				}
+			},
+			"relativeUrl": {
+				"value": "@concat('api/GlueCatalog-ListTables?database='\n,dataset().awsDatabase\n)",
+				"type": "Expression"
+			},
+			"requestMethod": "POST",
+			"additionalHeaders": {
+				"value": "@concat('Authorization: '\n,'Bearer '\n,dataset().bearer)",
+				"type": "Expression"
+			},
+			"requestBody": {
+				"value": "@string(dataset().awsConnectionBody)",
+				"type": "Expression"
+			},
+			"location": {
+				"type": "HttpServerLocation"
+			}
+		}
+	}
+}

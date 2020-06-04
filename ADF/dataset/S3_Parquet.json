@@ -1,0 +1,53 @@
+{
+	"name": "S3_Parquet",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "S3_Lake",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"S3AccessKeyId": {
+					"value": "@dataset().S3AccessKeyId",
+					"type": "Expression"
+				},
+				"S3SecretAccessKey": {
+					"value": "@dataset().S3SecretAccessKey",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"S3Bucket": {
+				"type": "string"
+			},
+			"S3Path": {
+				"type": "string"
+			},
+			"S3AccessKeyId": {
+				"type": "string"
+			},
+			"S3SecretAccessKey": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "AWS Lake"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AmazonS3Location",
+				"bucketName": {
+					"value": "@dataset().S3Bucket",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().S3Path",
+					"type": "Expression"
+				}
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	}
+}

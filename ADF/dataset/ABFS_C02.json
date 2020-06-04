@@ -1,0 +1,116 @@
+{
+	"name": "ABFS_C02",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ABFS_DWH",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "ABFS"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "export/satellite_carbon_dioxide.parquet",
+				"fileSystem": "datawarehouse"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": [
+			{
+				"name": "latitude",
+				"type": "FLOAT"
+			},
+			{
+				"name": "longitude",
+				"type": "FLOAT"
+			},
+			{
+				"name": "solar_zenith_angle",
+				"type": "FLOAT"
+			},
+			{
+				"name": "sensor_zenith_angle",
+				"type": "FLOAT"
+			},
+			{
+				"name": "co2",
+				"type": "FLOAT"
+			},
+			{
+				"name": "co2_uncertainty",
+				"type": "FLOAT"
+			},
+			{
+				"name": "co2_averaging_kernel",
+				"type": "FLOAT"
+			},
+			{
+				"name": "pressure_levels",
+				"type": "FLOAT"
+			},
+			{
+				"name": "pressure_weight",
+				"type": "FLOAT"
+			},
+			{
+				"name": "layer_dim",
+				"type": "INT64"
+			},
+			{
+				"name": "level_dim",
+				"type": "INT64"
+			},
+			{
+				"name": "sounding_dim",
+				"type": "INT64"
+			},
+			{
+				"name": "datetime",
+				"type": "INT96"
+			},
+			{
+				"name": "co2_quality_flag_int",
+				"type": "INT32"
+			},
+			{
+				"name": "filename",
+				"type": "UTF8"
+			},
+			{
+				"name": "year",
+				"type": "INT32"
+			},
+			{
+				"name": "month",
+				"type": "INT32"
+			},
+			{
+				"name": "geoKey",
+				"type": "UTF8"
+			},
+			{
+				"name": "date",
+				"type": "DATE"
+			},
+			{
+				"name": "city",
+				"type": "UTF8"
+			},
+			{
+				"name": "countryCode2",
+				"type": "UTF8"
+			},
+			{
+				"name": "admin1",
+				"type": "UTF8"
+			},
+			{
+				"name": "admin2",
+				"type": "UTF8"
+			}
+		]
+	}
+}
