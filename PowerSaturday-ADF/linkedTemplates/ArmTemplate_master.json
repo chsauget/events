@@ -1,0 +1,70 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "PowerSaturday-ADF"
+		},
+		"SQL_PowerSat_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'SQL_PowerSat'"
+		},
+		"ABFS_DWH_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://hackathondbk.dfs.core.windows.net"
+		},
+		"HTTP_Azf_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://powersaturdayazf.azurewebsites.net"
+		},
+		"S3_Lake_properties_typeProperties_accessKeyId": {
+			"type": "string",
+			"defaultValue": "@{linkedService().S3AccessKeyId}"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"SQL_PowerSat_connectionString": {
+						"value": "[parameters('SQL_PowerSat_connectionString')]"
+					},
+					"ABFS_DWH_properties_typeProperties_url": {
+						"value": "[parameters('ABFS_DWH_properties_typeProperties_url')]"
+					},
+					"HTTP_Azf_properties_typeProperties_url": {
+						"value": "[parameters('HTTP_Azf_properties_typeProperties_url')]"
+					},
+					"S3_Lake_properties_typeProperties_accessKeyId": {
+						"value": "[parameters('S3_Lake_properties_typeProperties_accessKeyId')]"
+					}
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}
