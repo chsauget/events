@@ -50,7 +50,8 @@
 					},
 					"waitOnCompletion": true,
 					"parameters": {
-						"KeyVaultUrl": ""
+						"KeyVaultUrl": "https://powersaturdayakv.vault.azure.net/",
+						"awsDatabase": "co2impact"
 					}
 				}
 			},
