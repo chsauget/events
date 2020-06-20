@@ -152,7 +152,8 @@
 									"tableOption": "autoCreate",
 									"disableMetricsCollection": false
 								},
-								"enableStaging": false
+								"enableStaging": false,
+								"dataIntegrationUnits": 16
 							},
 							"inputs": [
 								{
