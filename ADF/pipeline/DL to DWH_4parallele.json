@@ -1,5 +1,5 @@
 {
-	"name": "DL to DWH_11parallele",
+	"name": "DL to DWH_4parallele",
 	"properties": {
 		"activities": [
 			{
@@ -30,7 +30,7 @@
 				"type": "ExecuteDataFlow",
 				"dependsOn": [
 					{
-						"activity": "DF_Product",
+						"activity": "DF_Product_copy10",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -95,7 +95,14 @@
 			{
 				"name": "DF_Product_copy2",
 				"type": "ExecuteDataFlow",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "DF_Product_copy1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.00:30:00",
 					"retry": 3,
@@ -118,7 +125,14 @@
 			{
 				"name": "DF_Product_copy3",
 				"type": "ExecuteDataFlow",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "DF_Product_copy2",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.00:30:00",
 					"retry": 3,
@@ -164,7 +178,14 @@
 			{
 				"name": "DF_Product_copy5",
 				"type": "ExecuteDataFlow",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "DF_Product_copy4",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.00:30:00",
 					"retry": 3,
@@ -187,7 +208,14 @@
 			{
 				"name": "DF_Product_copy6",
 				"type": "ExecuteDataFlow",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "DF_Product_copy5",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.00:30:00",
 					"retry": 3,
@@ -233,7 +261,14 @@
 			{
 				"name": "DF_Product_copy8",
 				"type": "ExecuteDataFlow",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "DF_Product_copy7",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.00:30:00",
 					"retry": 3,
@@ -256,7 +291,14 @@
 			{
 				"name": "DF_Product_copy9",
 				"type": "ExecuteDataFlow",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "DF_Product_copy8",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.00:30:00",
 					"retry": 3,
@@ -279,7 +321,14 @@
 			{
 				"name": "DF_Product_copy10",
 				"type": "ExecuteDataFlow",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "DF_Product",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.00:30:00",
 					"retry": 3,
