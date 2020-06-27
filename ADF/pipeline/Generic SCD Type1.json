@@ -84,7 +84,7 @@
 					"source": {
 						"type": "AzureSqlSource",
 						"sqlReaderQuery": {
-							"value": "@concat('SELECT STRING_AGG(name,'','') AS [Columns] \nFROM sys.columns \nWHERE object_id = OBJECT_ID(''[dbo].[Dim'\n,pipeline().parameters.tableName\n,']'')\nAND column_id <> 1'\n)",
+							"value": "@concat('SELECT STRING_AGG(name,'','') AS [Columns] \nFROM sys.columns \nWHERE object_id = OBJECT_ID(''[dbo].[Dim'\n,pipeline().parameters.tableName\n,']'')\nAND column_id <> 1\nAND name <> ''Hash'''\n)",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00"
