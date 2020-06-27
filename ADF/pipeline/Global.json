@@ -1,0 +1,61 @@
+{
+	"name": "Global",
+	"properties": {
+		"activities": [
+			{
+				"name": "EP - SQL to DL",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "SQL to DL",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"TableListFull": "[\"SalesOrderDetail\",\"SalesOrderHeader\"]"
+					}
+				}
+			},
+			{
+				"name": "EP - DL to DWH",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "EP - SQL to DL",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "DL to DWH",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"parameters": {
+			"TableListFull": {
+				"type": "array",
+				"defaultValue": [
+					"SalesOrderDetail",
+					"SalesOrderHeader"
+				]
+			}
+		},
+		"variables": {
+			"PathDate": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Dataflow Meetup"
+		},
+		"annotations": []
+	}
+}
