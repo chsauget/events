@@ -41,18 +41,33 @@
 						"referenceName": "SQL_AdventureWork",
 						"type": "DatasetReference",
 						"parameters": {
-							"table": "Product"
+							"table": {
+								"value": "@pipeline().parameters.tableName",
+								"type": "Expression"
+							}
 						}
 					}
 				],
 				"outputs": [
 					{
 						"referenceName": "ABFS_Dyn",
-						"type": "DatasetReference"
+						"type": "DatasetReference",
+						"parameters": {
+							"FileName": {
+								"value": "@concat(pipeline().parameters.tableName,'.parquet')",
+								"type": "Expression"
+							}
+						}
 					}
 				]
 			}
 		],
+		"parameters": {
+			"tableName": {
+				"type": "string",
+				"defaultValue": "Product"
+			}
+		},
 		"annotations": []
 	}
 }
