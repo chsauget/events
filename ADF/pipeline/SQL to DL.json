@@ -9,7 +9,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@pipeline().parameters.TableListFull",
+						"value": "@split(pipeline().parameters.TableListFull,',')",
 						"type": "Expression"
 					},
 					"activities": [
@@ -348,11 +348,8 @@
 		],
 		"parameters": {
 			"TableListFull": {
-				"type": "array",
-				"defaultValue": [
-					"SalesOrderDetail",
-					"SalesOrderHeader"
-				]
+				"type": "string",
+				"defaultValue": "SalesOrderDetail,SalesOrderHeader"
 			},
 			"PathDate": {
 				"type": "string",

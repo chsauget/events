@@ -71,11 +71,8 @@
 		],
 		"parameters": {
 			"TableListFull": {
-				"type": "array",
-				"defaultValue": [
-					"SalesOrderDetail",
-					"SalesOrderHeader"
-				]
+				"type": "string",
+				"defaultValue": "SalesOrderDetail,SalesOrderHeader"
 			}
 		},
 		"variables": {
