@@ -72,7 +72,7 @@
 		"parameters": {
 			"TableListFull": {
 				"type": "string",
-				"defaultValue": "SalesOrderDetail,SalesOrderHeader"
+				"defaultValue": "Address,Customer,CustomerAddress,ProductCategory,ProductDescription,ProductModel,ProductModelProductDescription,SalesOrderDetail,SalesOrderHeader"
 			}
 		},
 		"variables": {
