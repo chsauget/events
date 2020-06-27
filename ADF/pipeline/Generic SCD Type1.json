@@ -4,7 +4,7 @@
 		"description": "https://techcommunity.microsoft.com/t5/Azure-Data-Factory/Create-Generic-SCD-Pattern-in-ADF-Mapping-Data-Flows/ba-p/918519",
 		"activities": [
 			{
-				"name": "Copy - Product",
+				"name": "Copy - Parquet",
 				"type": "Copy",
 				"dependsOn": [],
 				"policy": {
@@ -60,6 +60,44 @@
 						}
 					}
 				]
+			},
+			{
+				"name": "LKP - Columns",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Copy - Parquet",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "@concat('SELECT STRING_AGG(name,'','') AS [Columns] \nFROM sys.columns \nWHERE object_id = OBJECT_ID(''[dbo].[Dim'\n,pipeline().parameters.tableName\n,']'')\nAND column_id <> 1'\n)",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00"
+					},
+					"dataset": {
+						"referenceName": "SQL_Generic",
+						"type": "DatasetReference",
+						"parameters": {
+							"TableName": "columns",
+							"TableSchema": "sys"
+						}
+					}
+				}
 			}
 		],
 		"parameters": {
