@@ -5,6 +5,11 @@
 			"referenceName": "ABFS_DWH",
 			"type": "LinkedServiceReference"
 		},
+		"parameters": {
+			"FileName": {
+				"type": "string"
+			}
+		},
 		"folder": {
 			"name": "ABFS"
 		},
@@ -13,6 +18,10 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().FileName",
+					"type": "Expression"
+				},
 				"folderPath": "AdventureWork",
 				"fileSystem": "lake"
 			},
