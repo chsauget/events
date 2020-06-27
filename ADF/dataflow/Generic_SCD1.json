@@ -19,7 +19,15 @@
 					"name": "DimGeneric"
 				}
 			],
-			"sinks": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "SQL_Generic",
+						"type": "DatasetReference"
+					},
+					"name": "sinkDimGeneric"
+				}
+			],
 			"transformations": [
 				{
 					"name": "DrvHash",
@@ -27,9 +35,15 @@
 				},
 				{
 					"name": "LKPExists"
+				},
+				{
+					"name": "ConditionalSplit1"
+				},
+				{
+					"name": "AlterRowUpsert"
 				}
 			],
-			"script": "parameters{\n\tcolumns as string ('ProductNumber,ProductName,Color,StandardCost,ListPrice,Size')\n}\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> SrcGeneric\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> DimGeneric\nSrcGeneric derive(HashedColumns = sha2(256,byNames(split($columns,',')))) ~> DrvHash\nDrvHash, DimGeneric lookup(HashedColumns == byName('Hash'),\n\tmultiple: false,\n\tpickup: 'any',\n\tbroadcast: 'auto')~> LKPExists"
+			"script": "parameters{\n\tcolumns as string ('ProductNumber,ProductName,Color,StandardCost,ListPrice,Size'),\n\tBusinessKey as string ('ProductNumber')\n}\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> SrcGeneric\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> DimGeneric\nSrcGeneric derive(HashedColumns = sha2(256,byNames(split($columns,',')))) ~> DrvHash\nDrvHash, DimGeneric lookup(HashedColumns == byName('Hash'),\n\tmultiple: false,\n\tpickup: 'any',\n\tbroadcast: 'auto')~> LKPExists\nLKPExists split(isMatch(),\n\tdisjoint: false) ~> ConditionalSplit1@(Existing rows, New or updated rows)\nConditionalSplit1@New or updated rows alterRow(upsertIf(true())) ~> AlterRowUpsert\nAlterRowUpsert sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:false,\n\tupdateable:false,\n\tupsertable:true,\n\tformat: 'table',\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> sinkDimGeneric"
 		}
 	}
 }
