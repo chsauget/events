@@ -56,13 +56,13 @@
 						"datasetParameters": {
 							"SalesOrderDetailAbfs": {
 								"PathDate": {
-									"value": "@variables('PathDate')",
+									"value": "@pipeline().parameters.PathDate",
 									"type": "Expression"
 								}
 							},
 							"SalesOrderHeaderAbfs": {
 								"PathDate": {
-									"value": "@variables('PathDate')",
+									"value": "@pipeline().parameters.PathDate",
 									"type": "Expression"
 								}
 							}
@@ -76,17 +76,9 @@
 			}
 		],
 		"parameters": {
-			"TableListFull": {
-				"type": "array",
-				"defaultValue": [
-					"SalesOrderDetail",
-					"SalesOrderHeader"
-				]
-			}
-		},
-		"variables": {
 			"PathDate": {
-				"type": "String"
+				"type": "string",
+				"defaultValue": "2020/06/27"
 			}
 		},
 		"folder": {

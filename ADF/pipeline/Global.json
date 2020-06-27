@@ -5,7 +5,14 @@
 			{
 				"name": "EP - SQL to DL",
 				"type": "ExecutePipeline",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "SET - PathDate",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
@@ -14,7 +21,11 @@
 					},
 					"waitOnCompletion": true,
 					"parameters": {
-						"TableListFull": "[\"SalesOrderDetail\",\"SalesOrderHeader\"]"
+						"TableListFull": "[\"SalesOrderDetail\",\"SalesOrderHeader\"]",
+						"PathDate": {
+							"value": "@variables('PathDate')",
+							"type": "Expression"
+						}
 					}
 				}
 			},
@@ -35,7 +46,26 @@
 						"referenceName": "DL to DWH",
 						"type": "PipelineReference"
 					},
-					"waitOnCompletion": true
+					"waitOnCompletion": true,
+					"parameters": {
+						"PathDate": {
+							"value": "@variables('PathDate')",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "SET - PathDate",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "PathDate",
+					"value": {
+						"value": "@formatDateTime(utcnow(), 'yyyy/MM/dd')",
+						"type": "Expression"
+					}
 				}
 			}
 		],

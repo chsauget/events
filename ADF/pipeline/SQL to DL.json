@@ -5,14 +5,7 @@
 			{
 				"name": "ForEach - Copy FULL",
 				"type": "ForEach",
-				"dependsOn": [
-					{
-						"activity": "SET - PathDate",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"dependsOn": [],
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
@@ -71,7 +64,7 @@
 									"type": "DatasetReference",
 									"parameters": {
 										"PathDate": {
-											"value": "@variables('PathDate')",
+											"value": "@pipeline().parameters.PathDate",
 											"type": "Expression"
 										},
 										"TableName": {
@@ -86,29 +79,9 @@
 				}
 			},
 			{
-				"name": "SET - PathDate",
-				"type": "SetVariable",
-				"dependsOn": [],
-				"userProperties": [],
-				"typeProperties": {
-					"variableName": "PathDate",
-					"value": {
-						"value": "@formatDateTime(utcnow(), 'yyyy/MM/dd')",
-						"type": "Expression"
-					}
-				}
-			},
-			{
 				"name": "LKP - MaxDate",
 				"type": "Lookup",
-				"dependsOn": [
-					{
-						"activity": "SET - PathDate",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"dependsOn": [],
 				"policy": {
 					"timeout": "0.00:30:00",
 					"retry": 0,
@@ -262,7 +235,7 @@
 									"type": "DatasetReference",
 									"parameters": {
 										"PathDate": {
-											"value": "@variables('PathDate')",
+											"value": "@pipeline().parameters.PathDate",
 											"type": "Expression"
 										},
 										"TableName": "Product"
@@ -380,11 +353,10 @@
 					"SalesOrderDetail",
 					"SalesOrderHeader"
 				]
-			}
-		},
-		"variables": {
+			},
 			"PathDate": {
-				"type": "String"
+				"type": "string",
+				"defaultValue": "2020/06/27"
 			}
 		},
 		"folder": {
