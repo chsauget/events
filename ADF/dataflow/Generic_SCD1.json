@@ -1,6 +1,9 @@
 {
 	"name": "Generic_SCD1",
 	"properties": {
+		"folder": {
+			"name": "Dataflow Meetup"
+		},
 		"type": "MappingDataFlow",
 		"typeProperties": {
 			"sources": [
@@ -10,40 +13,15 @@
 						"type": "DatasetReference"
 					},
 					"name": "SrcGeneric"
-				},
-				{
-					"dataset": {
-						"referenceName": "SQL_Generic",
-						"type": "DatasetReference"
-					},
-					"name": "DimGeneric"
 				}
 			],
-			"sinks": [
-				{
-					"dataset": {
-						"referenceName": "SQL_Generic",
-						"type": "DatasetReference"
-					},
-					"name": "sinkDimGeneric"
-				}
-			],
+			"sinks": [],
 			"transformations": [
 				{
-					"name": "DrvHash",
-					"description": "Creating/updating the columns 'HashedColumns'\n\nsha2(256,columns()) could be used"
-				},
-				{
-					"name": "LKPExists"
-				},
-				{
-					"name": "ConditionalSplit1"
-				},
-				{
-					"name": "AlterRowUpsert"
+					"name": "DrvHash"
 				}
 			],
-			"script": "parameters{\n\tcolumns as string ('ProductNumber,ProductName,Color,StandardCost,ListPrice,Size'),\n\tBusinessKey as string ('ProductNumber')\n}\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> SrcGeneric\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> DimGeneric\nSrcGeneric derive(Hash = sha2(256,byNames(split($columns,',')))) ~> DrvHash\nDrvHash, DimGeneric lookup(Hash == byName('Hash'),\n\tmultiple: false,\n\tpickup: 'any',\n\tbroadcast: 'auto')~> LKPExists\nLKPExists split(isMatch(),\n\tdisjoint: false) ~> ConditionalSplit1@(ExistingRows, NewOrUpdatedRows)\nConditionalSplit1@NewOrUpdatedRows alterRow(upsertIf(true())) ~> AlterRowUpsert\nAlterRowUpsert sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:false,\n\tupdateable:false,\n\tupsertable:true,\n\tkeys:[($BusinessKey)],\n\tformat: 'table',\n\tmapColumn(\n\t\teach(patternMatch(`.*[^_]$`))\n\t)) ~> sinkDimGeneric"
+			"script": "source(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> SrcGeneric\nSrcGeneric derive() ~> DrvHash"
 		}
 	}
 }
