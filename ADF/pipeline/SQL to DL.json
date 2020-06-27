@@ -131,7 +131,7 @@
 					"source": {
 						"type": "AzureSqlSource",
 						"sqlReaderQuery": {
-							"value": "@CONCAT('select * from Product where ModifiedDate >= ', 'CAST(''' , activity('LKP - MaxDate').output.firstRow.MaxDate , ''' AS DateTime)')",
+							"value": "@CONCAT('select * from SalesLT.Product where ModifiedDate >= ', 'CAST(''' , activity('LKP - MaxDate').output.firstRow.MaxDate , ''' AS DateTime)')",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00"
