@@ -1,0 +1,30 @@
+{
+	"name": "DWH_paramLoadingLastDate",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SQL_PowerSat",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Dataflow Meetup/DWH"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "TableName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "MaxDate",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "param_LoadingLastDate"
+		}
+	}
+}

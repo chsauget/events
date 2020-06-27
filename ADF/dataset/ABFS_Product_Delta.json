@@ -1,105 +1,107 @@
 {
-	"name": "SQL_SalesOrderHeader",
+	"name": "ABFS_Product_Delta",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "SQL_AdventureWork",
+			"referenceName": "ABFS_DWH",
 			"type": "LinkedServiceReference"
 		},
+		"parameters": {
+			"PathDate": {
+				"type": "string"
+			}
+		},
 		"folder": {
-			"name": "Dataflow Meetup/SQL"
+			"name": "Dataflow Meetup/ABFS"
 		},
 		"annotations": [],
-		"type": "AzureSqlTable",
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "Product.parquet",
+				"folderPath": {
+					"value": "@concat('Dataflow Meetup/Raw/Product/',dataset().PathDate)",
+					"type": "Expression"
+				},
+				"fileSystem": "lake"
+			},
+			"compressionCodec": "snappy"
+		},
 		"schema": [
 			{
 				"name": "ProductID",
-				"type": "int",
-				"precision": 10
+				"type": "INT32"
 			},
 			{
 				"name": "Name",
-				"type": "nvarchar"
+				"type": "UTF8"
 			},
 			{
 				"name": "ProductNumber",
-				"type": "nvarchar"
+				"type": "UTF8"
 			},
 			{
 				"name": "Color",
-				"type": "nvarchar"
+				"type": "UTF8"
 			},
 			{
 				"name": "StandardCost",
-				"type": "money",
+				"type": "DECIMAL",
 				"precision": 19,
 				"scale": 4
 			},
 			{
 				"name": "ListPrice",
-				"type": "money",
+				"type": "DECIMAL",
 				"precision": 19,
 				"scale": 4
 			},
 			{
 				"name": "Size",
-				"type": "nvarchar"
+				"type": "UTF8"
 			},
 			{
 				"name": "Weight",
-				"type": "decimal",
+				"type": "DECIMAL",
 				"precision": 8,
 				"scale": 2
 			},
 			{
 				"name": "ProductCategoryID",
-				"type": "int",
-				"precision": 10
+				"type": "INT32"
 			},
 			{
 				"name": "ProductModelID",
-				"type": "int",
-				"precision": 10
+				"type": "INT32"
 			},
 			{
 				"name": "SellStartDate",
-				"type": "datetime",
-				"precision": 23,
-				"scale": 3
+				"type": "INT96"
 			},
 			{
 				"name": "SellEndDate",
-				"type": "datetime",
-				"precision": 23,
-				"scale": 3
+				"type": "INT96"
 			},
 			{
 				"name": "DiscontinuedDate",
-				"type": "datetime",
-				"precision": 23,
-				"scale": 3
+				"type": "INT96"
 			},
 			{
 				"name": "ThumbNailPhoto",
-				"type": "varbinary"
+				"type": "BINARY"
 			},
 			{
 				"name": "ThumbnailPhotoFileName",
-				"type": "nvarchar"
+				"type": "UTF8"
 			},
 			{
 				"name": "rowguid",
-				"type": "uniqueidentifier"
+				"type": "UTF8"
 			},
 			{
 				"name": "ModifiedDate",
-				"type": "datetime",
-				"precision": 23,
-				"scale": 3
+				"type": "INT96"
 			}
-		],
-		"typeProperties": {
-			"schema": "SalesLT",
-			"table": "SalesOrderHeader"
-		}
+		]
 	}
 }

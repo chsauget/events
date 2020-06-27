@@ -6,7 +6,7 @@
 			"type": "LinkedServiceReference"
 		},
 		"folder": {
-			"name": "Dataflow Meetup"
+			"name": "Dataflow Meetup/SQL"
 		},
 		"annotations": [],
 		"type": "AzureSqlTable",

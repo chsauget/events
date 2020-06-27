@@ -1,12 +1,12 @@
 {
-	"name": "SQL_DimProduct",
+	"name": "SQL_Product",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "SQL_AdventureWork",
 			"type": "LinkedServiceReference"
 		},
 		"folder": {
-			"name": "Dataflow Meetup"
+			"name": "Dataflow Meetup/SQL"
 		},
 		"annotations": [],
 		"type": "AzureSqlTable",
