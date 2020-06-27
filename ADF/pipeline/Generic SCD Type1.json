@@ -47,7 +47,7 @@
 				],
 				"outputs": [
 					{
-						"referenceName": "ABFS_C02",
+						"referenceName": "ABFS_Dyn",
 						"type": "DatasetReference"
 					}
 				]
