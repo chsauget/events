@@ -20,7 +20,7 @@
 				"type": "AzureBlobFSLocation",
 				"fileName": "Product.parquet",
 				"folderPath": {
-					"value": "@concat('Dataflow Meetup/Raw/Product/',dataset().PathDate)",
+					"value": "@concat('DataflowMeetup/Raw/Product/',dataset().PathDate)",
 					"type": "Expression"
 				},
 				"fileSystem": "lake"

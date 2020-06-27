@@ -20,7 +20,7 @@
 				"type": "AzureBlobFSLocation",
 				"fileName": "SalesOrderHeader.parquet",
 				"folderPath": {
-					"value": "@concat('Dataflow Meetup/Raw/SalesOrderHeader/',dataset().PathDate)",
+					"value": "@concat('DataflowMeetup/Raw/SalesOrderHeader/',dataset().PathDate)",
 					"type": "Expression"
 				},
 				"fileSystem": "lake"

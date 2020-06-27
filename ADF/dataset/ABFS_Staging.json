@@ -23,7 +23,7 @@
 					"type": "Expression"
 				},
 				"folderPath": {
-					"value": "@concat('Dataflow Meetup/Staging/',dataset().TableName)",
+					"value": "@concat('DataflowMeetup/Staging/',dataset().TableName)",
 					"type": "Expression"
 				},
 				"fileSystem": "lake"

@@ -324,12 +324,6 @@
 									"value": "@pipeline().parameters.PathDate",
 									"type": "Expression"
 								}
-							},
-							"ProductFullAbfs": {
-								"TableName": "Product"
-							},
-							"DestProductFull": {
-								"TableName": "Product"
 							}
 						}
 					},

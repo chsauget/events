@@ -5,11 +5,6 @@
 			"referenceName": "ABFS_DWH",
 			"type": "LinkedServiceReference"
 		},
-		"parameters": {
-			"TableName": {
-				"type": "string"
-			}
-		},
 		"folder": {
 			"name": "Dataflow Meetup/ABFS"
 		},
@@ -19,7 +14,7 @@
 			"location": {
 				"type": "AzureBlobFSLocation",
 				"folderPath": {
-					"value": "@concat('Dataflow Meetup/Staging/Product')",
+					"value": "@concat('DataflowMeetup/Staging/Product')",
 					"type": "Expression"
 				},
 				"fileSystem": "lake"
