@@ -21,7 +21,10 @@
 					},
 					"waitOnCompletion": true,
 					"parameters": {
-						"TableListFull": "SalesOrderDetail,SalesOrderHeader",
+						"TableListFull": {
+							"value": "@pipeline().parameters.TableListFull",
+							"type": "Expression"
+						},
 						"PathDate": {
 							"value": "@variables('PathDate')",
 							"type": "Expression"
