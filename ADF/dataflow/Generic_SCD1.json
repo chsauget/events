@@ -5,12 +5,20 @@
 		"typeProperties": {
 			"sources": [
 				{
-					"name": "source1"
+					"dataset": {
+						"referenceName": "ABFS_Dyn",
+						"type": "DatasetReference"
+					},
+					"name": "SrcGeneric"
 				}
 			],
 			"sinks": [],
-			"transformations": [],
-			"script": "source(allowSchemaDrift: true,\n\tvalidateSchema: false) ~> source1"
+			"transformations": [
+				{
+					"name": "DrvHash"
+				}
+			],
+			"script": "source(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> SrcGeneric\nSrcGeneric derive() ~> DrvHash"
 		}
 	}
 }
