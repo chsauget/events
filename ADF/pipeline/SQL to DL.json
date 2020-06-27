@@ -1,0 +1,122 @@
+{
+	"name": "SQL to DL",
+	"properties": {
+		"activities": [
+			{
+				"name": "ForEach - Copy",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "SET - PathDate",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@pipeline().parameters.TableList",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Copy - Table",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.00:30:00",
+								"retry": 3,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"queryTimeout": "02:00:00"
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "SQL_AdventureWork",
+									"type": "DatasetReference",
+									"parameters": {
+										"table": {
+											"value": "@item()",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ABFS_Raw",
+									"type": "DatasetReference",
+									"parameters": {
+										"PathDate": {
+											"value": "@variables('PathDate')",
+											"type": "Expression"
+										},
+										"TableName": {
+											"value": "@item()",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "SET - PathDate",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "PathDate",
+					"value": {
+						"value": "@formatDateTime(utcnow(), 'yyyy/MM/dd')",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"TableList": {
+				"type": "array",
+				"defaultValue": [
+					"Product",
+					"SalesOrderDetail",
+					"SalesOrderHeader"
+				]
+			}
+		},
+		"variables": {
+			"PathDate": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Dataflow Meetup"
+		},
+		"annotations": []
+	}
+}
