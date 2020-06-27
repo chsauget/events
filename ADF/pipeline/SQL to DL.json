@@ -167,7 +167,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"PathDate": {
-								"value": "@variables('PathDate')",
+								"value": "@pipeline().parameters.PathDate",
 								"type": "Expression"
 							},
 							"TableName": "Product"
@@ -321,19 +321,19 @@
 						"datasetParameters": {
 							"ProductDeltaAbfs": {
 								"PathDate": {
-									"value": "@variables('PathDate')",
+									"value": "@pipeline().parameters.PathDate",
 									"type": "Expression"
 								}
 							},
 							"ProductFullAbfs": {
 								"TableName": {
-									"value": "@variables('PathDate')",
+									"value": "@pipeline().parameters.PathDate",
 									"type": "Expression"
 								}
 							},
 							"DestProductFull": {
 								"TableName": {
-									"value": "@variables('PathDate')",
+									"value": "@pipeline().parameters.PathDate",
 									"type": "Expression"
 								}
 							}
