@@ -181,8 +181,11 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "SQL_Product",
-						"type": "DatasetReference"
+						"referenceName": "SQL_AdventureWork",
+						"type": "DatasetReference",
+						"parameters": {
+							"table": "Product"
+						}
 					}
 				],
 				"outputs": [
