@@ -326,16 +326,10 @@
 								}
 							},
 							"ProductFullAbfs": {
-								"TableName": {
-									"value": "@pipeline().parameters.PathDate",
-									"type": "Expression"
-								}
+								"TableName": "Product"
 							},
 							"DestProductFull": {
-								"TableName": {
-									"value": "@pipeline().parameters.PathDate",
-									"type": "Expression"
-								}
+								"TableName": "Product"
 							}
 						}
 					},
