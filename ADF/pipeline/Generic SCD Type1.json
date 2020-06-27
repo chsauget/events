@@ -4,8 +4,8 @@
 		"description": "https://techcommunity.microsoft.com/t5/Azure-Data-Factory/Create-Generic-SCD-Pattern-in-ADF-Mapping-Data-Flows/ba-p/918519",
 		"activities": [
 			{
-				"name": "SCD Type1 Generic",
-				"type": "ExecuteDataFlow",
+				"name": "Copy - Product",
+				"type": "Copy",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "7.00:00:00",
@@ -16,38 +16,41 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"dataflow": {
-						"referenceName": "scdT1Generic",
-						"type": "DataFlowReference",
-						"parameters": {
-							"dimname": "'dimprods'",
-							"keycol": "'ProductNumber'",
-							"SurrogateKey": "'ProductID'",
-							"tablename": "'DimProducts'"
-						},
-						"datasetParameters": {
-							"NewMembers1": {
-								"filename": "DimProducts.csv"
-							},
-							"ExistingMembers": {
-								"tablename": "DimProducts"
-							},
-							"SetMaxKey": {
-								"tablename": "DimProducts"
-							},
-							"sink1": {
-								"tablename": "DimProducts"
-							},
-							"sink2": {
-								"tablename": "DimProducts"
-							}
+					"source": {
+						"type": "AzureSqlSource",
+						"queryTimeout": "02:00:00"
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
 						}
 					},
-					"compute": {
-						"coreCount": 8,
-						"computeType": "General"
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
 					}
-				}
+				},
+				"inputs": [
+					{
+						"referenceName": "SQL_AdventureWork",
+						"type": "DatasetReference",
+						"parameters": {
+							"table": "Product"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ABFS_C02",
+						"type": "DatasetReference"
+					}
+				]
 			}
 		],
 		"annotations": []

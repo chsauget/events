@@ -1,0 +1,27 @@
+{
+	"name": "SQL_AdventureWork",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SQL_AdventureWork",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"table": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "SCD Gen"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "SalesLT",
+			"table": {
+				"value": "@dataset().table",
+				"type": "Expression"
+			}
+		}
+	}
+}
