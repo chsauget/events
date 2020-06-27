@@ -10,15 +10,26 @@
 						"type": "DatasetReference"
 					},
 					"name": "SrcGeneric"
+				},
+				{
+					"dataset": {
+						"referenceName": "SQL_Generic",
+						"type": "DatasetReference"
+					},
+					"name": "DimGeneric"
 				}
 			],
 			"sinks": [],
 			"transformations": [
 				{
-					"name": "DrvHash"
+					"name": "DrvHash",
+					"description": "Creating/updating the columns 'HashedColumns'\n\nsha2(256,columns()) could be used"
+				},
+				{
+					"name": "LKPExists"
 				}
 			],
-			"script": "source(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> SrcGeneric\nSrcGeneric derive() ~> DrvHash"
+			"script": "parameters{\n\tcolumns as string ('ProductNumber,ProductName,Color,StandardCost,ListPrice,Size')\n}\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> SrcGeneric\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> DimGeneric\nSrcGeneric derive(HashedColumns = sha2(256,byNames(split($columns,',')))) ~> DrvHash\nDrvHash, DimGeneric lookup(HashedColumns == byName('Hash'),\n\tmultiple: false,\n\tpickup: 'any',\n\tbroadcast: 'auto')~> LKPExists"
 		}
 	}
 }
