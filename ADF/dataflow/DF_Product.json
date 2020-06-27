@@ -9,10 +9,17 @@
 			"sources": [
 				{
 					"dataset": {
-						"referenceName": "ABFS_C02",
+						"referenceName": "ABFS_Product_Full",
 						"type": "DatasetReference"
 					},
-					"name": "SatelliteCo2"
+					"name": "ProductAbfs"
+				},
+				{
+					"dataset": {
+						"referenceName": "DWH_DimProduct",
+						"type": "DatasetReference"
+					},
+					"name": "ProductDw"
 				}
 			],
 			"sinks": [
@@ -21,21 +28,30 @@
 						"referenceName": "DWH_DimProduct",
 						"type": "DatasetReference"
 					},
-					"name": "DestDimAnalyticsAxis"
+					"name": "DestDimProduct"
 				}
 			],
 			"transformations": [
 				{
-					"name": "FilterYear"
-				},
-				{
 					"name": "SelectDimColumns"
 				},
 				{
-					"name": "AggDistinctCoumns"
+					"name": "DerHash"
+				},
+				{
+					"name": "SelectDwColumns"
+				},
+				{
+					"name": "Join1"
+				},
+				{
+					"name": "FilterPerimetre"
+				},
+				{
+					"name": "AlterRow1"
 				}
 			],
-			"script": "source(output(\n\t\tlatitude as float,\n\t\tlongitude as float,\n\t\tsolar_zenith_angle as float,\n\t\tsensor_zenith_angle as float,\n\t\tco2 as float,\n\t\tco2_uncertainty as float,\n\t\tco2_averaging_kernel as float,\n\t\tpressure_levels as float,\n\t\tpressure_weight as float,\n\t\tlayer_dim as long,\n\t\tlevel_dim as long,\n\t\tsounding_dim as long,\n\t\tdatetime as timestamp,\n\t\tco2_quality_flag_int as integer,\n\t\tfilename as string,\n\t\tyear as integer,\n\t\tmonth as integer,\n\t\tgeoKey as string,\n\t\tdate as date,\n\t\tcity as string,\n\t\tcountryCode2 as string,\n\t\tadmin1 as string,\n\t\tadmin2 as string\n\t),\n\tallowSchemaDrift: false,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> SatelliteCo2\nSatelliteCo2 filter({year}==2016) ~> FilterYear\nFilterYear select(mapColumn(\n\t\tlatitude,\n\t\tlongitude,\n\t\tsolar_zenith_angle,\n\t\tsensor_zenith_angle,\n\t\tlayer_dim,\n\t\tlevel_dim,\n\t\tsounding_dim\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectDimColumns\nSelectDimColumns aggregate(groupBy(latitude,\n\t\tlongitude),\n\teach(match(!in(['latitude','longitude'],name)), $$ = first($$))) ~> AggDistinctCoumns\nAggDistinctCoumns sink(input(\n\t\tProductId as integer,\n\t\tHash as string,\n\t\tProductNumber as string,\n\t\tProductName as string,\n\t\tColor as string,\n\t\tStandardCost as decimal(19,4),\n\t\tListPrice as decimal(19,4),\n\t\tSize as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> DestDimAnalyticsAxis"
+			"script": "source(output(\n\t\tProductID as integer,\n\t\tName as string,\n\t\tProductNumber as string,\n\t\tColor as string,\n\t\tStandardCost as decimal(19,4),\n\t\tListPrice as decimal(19,4),\n\t\tSize as string,\n\t\tWeight as decimal(8,2),\n\t\tProductCategoryID as integer,\n\t\tProductModelID as integer,\n\t\tSellStartDate as timestamp,\n\t\tSellEndDate as timestamp,\n\t\tDiscontinuedDate as timestamp,\n\t\tThumbNailPhoto as binary,\n\t\tThumbnailPhotoFileName as string,\n\t\trowguid as string,\n\t\tModifiedDate as timestamp\n\t),\n\tallowSchemaDrift: false,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> ProductAbfs\nsource(output(\n\t\tProductId as integer,\n\t\tHash as string,\n\t\tProductNumber as string,\n\t\tProductName as string,\n\t\tColor as string,\n\t\tStandardCost as decimal(19,4),\n\t\tListPrice as decimal(19,4),\n\t\tSize as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> ProductDw\nProductAbfs select(mapColumn(\n\t\tProductID,\n\t\tProductName = Name,\n\t\tProductNumber,\n\t\tColor,\n\t\tStandardCost,\n\t\tListPrice,\n\t\tSize\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectDimColumns\nSelectDimColumns derive(Hash = sha2(256,ProductName,ProductNumber,Color,StandardCost,ListPrice,Size)) ~> DerHash\nProductDw select(mapColumn(\n\t\tdw_ProductId = ProductId,\n\t\tdw_Hash = Hash,\n\t\tdw_ProductNumber = ProductNumber,\n\t\tdw_ProductName = ProductName,\n\t\tdw_Color = Color,\n\t\tdw_StandardCost = StandardCost,\n\t\tdw_ListPrice = ListPrice,\n\t\tdw_Size = Size\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectDwColumns\nDerHash, SelectDwColumns join(ProductID == dw_ProductId,\n\tjoinType:'left',\n\tbroadcast: 'auto')~> Join1\nJoin1 filter(Hash != dw_Hash) ~> FilterPerimetre\nFilterPerimetre alterRow(insertIf(true())) ~> AlterRow1\nAlterRow1 sink(input(\n\t\tProductId as integer,\n\t\tHash as string,\n\t\tProductNumber as string,\n\t\tProductName as string,\n\t\tColor as string,\n\t\tStandardCost as decimal(19,4),\n\t\tListPrice as decimal(19,4),\n\t\tSize as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tmapColumn(\n\t\tProductId = ProductID,\n\t\tHash,\n\t\tProductNumber,\n\t\tProductName,\n\t\tColor,\n\t\tStandardCost,\n\t\tListPrice,\n\t\tSize\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> DestDimProduct"
 		}
 	}
 }
