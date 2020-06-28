@@ -1,0 +1,38 @@
+{
+	"name": "ABFS_Raw",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ABFS_DWH",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"PathDate": {
+				"type": "string"
+			},
+			"TableName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Dataflow Meetup/ABFS"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@concat(dataset().TableName,'.parquet')",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@concat('DataflowMeetup/Raw/',dataset().TableName,'/',dataset().PathDate)",
+					"type": "Expression"
+				},
+				"fileSystem": "lake"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	}
+}

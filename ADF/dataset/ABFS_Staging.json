@@ -1,0 +1,35 @@
+{
+	"name": "ABFS_Staging",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ABFS_DWH",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"TableName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Dataflow Meetup/ABFS"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@concat(dataset().TableName,'.parquet')",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@concat('DataflowMeetup/Staging/',dataset().TableName)",
+					"type": "Expression"
+				},
+				"fileSystem": "lake"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	}
+}

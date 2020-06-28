@@ -1,0 +1,363 @@
+{
+	"name": "DL to DWH_4parallele",
+	"properties": {
+		"activities": [
+			{
+				"name": "DF_Product",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.00:30:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "DF_Product",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					}
+				}
+			},
+			{
+				"name": "DF_SalesOrder",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "DF_Product_copy10",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.00:30:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "DF_SalesOrder",
+						"type": "DataFlowReference",
+						"datasetParameters": {
+							"SalesOrderDetailAbfs": {
+								"PathDate": {
+									"value": "@pipeline().parameters.PathDate",
+									"type": "Expression"
+								}
+							},
+							"SalesOrderHeaderAbfs": {
+								"PathDate": {
+									"value": "@pipeline().parameters.PathDate",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					}
+				}
+			},
+			{
+				"name": "DF_Product_copy1",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.00:30:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "DF_Product",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					}
+				}
+			},
+			{
+				"name": "DF_Product_copy2",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "DF_Product_copy1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.00:30:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "DF_Product",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					}
+				}
+			},
+			{
+				"name": "DF_Product_copy3",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "DF_Product_copy2",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.00:30:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "DF_Product",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					}
+				}
+			},
+			{
+				"name": "DF_Product_copy4",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.00:30:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "DF_Product",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					}
+				}
+			},
+			{
+				"name": "DF_Product_copy5",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "DF_Product_copy4",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.00:30:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "DF_Product",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					}
+				}
+			},
+			{
+				"name": "DF_Product_copy6",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "DF_Product_copy5",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.00:30:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "DF_Product",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					}
+				}
+			},
+			{
+				"name": "DF_Product_copy7",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.00:30:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "DF_Product",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					}
+				}
+			},
+			{
+				"name": "DF_Product_copy8",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "DF_Product_copy7",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.00:30:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "DF_Product",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					}
+				}
+			},
+			{
+				"name": "DF_Product_copy9",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "DF_Product_copy8",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.00:30:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "DF_Product",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					}
+				}
+			},
+			{
+				"name": "DF_Product_copy10",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "DF_Product",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.00:30:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "DF_Product",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"PathDate": {
+				"type": "string",
+				"defaultValue": "2020/06/27"
+			}
+		},
+		"folder": {
+			"name": "Dataflow Meetup"
+		},
+		"annotations": []
+	}
+}

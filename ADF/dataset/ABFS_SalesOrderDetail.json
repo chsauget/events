@@ -1,0 +1,75 @@
+{
+	"name": "ABFS_SalesOrderDetail",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ABFS_DWH",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"PathDate": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Dataflow Meetup/ABFS"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "SalesOrderDetail.parquet",
+				"folderPath": {
+					"value": "@concat('DataflowMeetup/Raw/SalesOrderDetail/',dataset().PathDate)",
+					"type": "Expression"
+				},
+				"fileSystem": "lake"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": [
+			{
+				"name": "SalesOrderID",
+				"type": "INT32"
+			},
+			{
+				"name": "SalesOrderDetailID",
+				"type": "INT32"
+			},
+			{
+				"name": "OrderQty",
+				"type": "INT32"
+			},
+			{
+				"name": "ProductID",
+				"type": "INT32"
+			},
+			{
+				"name": "UnitPrice",
+				"type": "DECIMAL",
+				"precision": 19,
+				"scale": 4
+			},
+			{
+				"name": "UnitPriceDiscount",
+				"type": "DECIMAL",
+				"precision": 19,
+				"scale": 4
+			},
+			{
+				"name": "LineTotal",
+				"type": "DECIMAL",
+				"precision": 38,
+				"scale": 6
+			},
+			{
+				"name": "rowguid",
+				"type": "UTF8"
+			},
+			{
+				"name": "ModifiedDate",
+				"type": "INT96"
+			}
+		]
+	}
+}

@@ -1,0 +1,32 @@
+{
+	"name": "ABFS_Dyn",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ABFS_DWH",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"FileName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "ABFS"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().FileName",
+					"type": "Expression"
+				},
+				"folderPath": "AdventureWork",
+				"fileSystem": "lake"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	}
+}

@@ -1,8 +1,8 @@
 {
-	"name": "ParameterTable",
+	"name": "ParameterTable1",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "SQL_AdventureWork",
+			"referenceName": "SQL_PowerSat",
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {

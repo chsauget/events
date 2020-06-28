@@ -7,21 +7,21 @@
 			"sources": [
 				{
 					"dataset": {
-						"referenceName": "BlobInputFolder",
+						"referenceName": "BlobInputFolder1",
 						"type": "DatasetReference"
 					},
 					"name": "NewMembers1"
 				},
 				{
 					"dataset": {
-						"referenceName": "ParameterTable",
+						"referenceName": "ParameterTable1",
 						"type": "DatasetReference"
 					},
 					"name": "ExistingMembers"
 				},
 				{
 					"dataset": {
-						"referenceName": "ParameterTable",
+						"referenceName": "ParameterTable1",
 						"type": "DatasetReference"
 					},
 					"name": "SetMaxKey"
@@ -30,14 +30,14 @@
 			"sinks": [
 				{
 					"dataset": {
-						"referenceName": "ParameterTable",
+						"referenceName": "ParameterTable1",
 						"type": "DatasetReference"
 					},
 					"name": "sink1"
 				},
 				{
 					"dataset": {
-						"referenceName": "ParameterTable",
+						"referenceName": "ParameterTable1",
 						"type": "DatasetReference"
 					},
 					"name": "sink2"

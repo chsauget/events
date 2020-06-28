@@ -1,23 +1,25 @@
 {
-	"name": "ParameterTable",
+	"name": "SQL_AdventureWork",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "SQL_AdventureWork",
 			"type": "LinkedServiceReference"
 		},
 		"parameters": {
-			"tablename": {
-				"type": "string",
-				"defaultValue": "DimProducts"
+			"table": {
+				"type": "string"
 			}
+		},
+		"folder": {
+			"name": "SCD Gen"
 		},
 		"annotations": [],
 		"type": "AzureSqlTable",
 		"schema": [],
 		"typeProperties": {
-			"schema": "dbo",
+			"schema": "SalesLT",
 			"table": {
-				"value": "@dataset().tablename",
+				"value": "@dataset().table",
 				"type": "Expression"
 			}
 		}

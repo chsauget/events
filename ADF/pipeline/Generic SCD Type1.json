@@ -4,8 +4,8 @@
 		"description": "https://techcommunity.microsoft.com/t5/Azure-Data-Factory/Create-Generic-SCD-Pattern-in-ADF-Mapping-Data-Flows/ba-p/918519",
 		"activities": [
 			{
-				"name": "SCD Type1 Generic",
-				"type": "ExecuteDataFlow",
+				"name": "Copy - Parquet",
+				"type": "Copy",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "7.00:00:00",
@@ -16,30 +16,136 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"queryTimeout": "02:00:00"
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "SQL_AdventureWork",
+						"type": "DatasetReference",
+						"parameters": {
+							"table": {
+								"value": "@pipeline().parameters.tableName",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ABFS_Dyn",
+						"type": "DatasetReference",
+						"parameters": {
+							"FileName": {
+								"value": "@concat(pipeline().parameters.tableName,'.parquet')",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "LKP - Columns",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Copy - Parquet",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "@concat('SELECT STRING_AGG(name,'','') AS [Columns] \nFROM sys.columns \nWHERE object_id = OBJECT_ID(''[dbo].[Dim'\n,pipeline().parameters.tableName\n,']'')\nAND column_id <> 1\nAND name <> ''Hash'''\n)",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00"
+					},
+					"dataset": {
+						"referenceName": "SQL_Generic",
+						"type": "DatasetReference",
+						"parameters": {
+							"TableName": "columns",
+							"TableSchema": "sys"
+						}
+					}
+				}
+			},
+			{
+				"name": "Generic_SCD1",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "LKP - Columns",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
 					"dataflow": {
-						"referenceName": "scdT1Generic",
+						"referenceName": "Generic_SCD1",
 						"type": "DataFlowReference",
 						"parameters": {
-							"dimname": "'dimprods'",
-							"keycol": "'ProductNumber'",
-							"SurrogateKey": "'ProductID'",
-							"tablename": "'DimProducts'"
+							"columns": "'ProductNumber,ProductName,Color,StandardCost,ListPrice,Size'",
+							"BusinessKey": "'ProductNumber'"
 						},
 						"datasetParameters": {
-							"NewMembers1": {
-								"filename": "DimProducts.csv"
+							"SrcGeneric": {
+								"FileName": {
+									"value": "@concat(pipeline().parameters.tableName\n,'.parquet'\n)",
+									"type": "Expression"
+								}
 							},
-							"ExistingMembers": {
-								"tablename": "DimProducts"
+							"DimGeneric": {
+								"TableName": {
+									"value": "@concat('Dim'\n,pipeline().parameters.tableName\n)",
+									"type": "Expression"
+								},
+								"TableSchema": "dbo"
 							},
-							"SetMaxKey": {
-								"tablename": "DimProducts"
-							},
-							"sink1": {
-								"tablename": "DimProducts"
-							},
-							"sink2": {
-								"tablename": "DimProducts"
+							"sinkDimGeneric": {
+								"TableName": {
+									"value": "@concat('Dim'\n,pipeline().parameters.tableName\n)",
+									"type": "Expression"
+								},
+								"TableSchema": "dbo"
 							}
 						}
 					},
@@ -50,6 +156,12 @@
 				}
 			}
 		],
+		"parameters": {
+			"tableName": {
+				"type": "string",
+				"defaultValue": "Product"
+			}
+		},
 		"annotations": []
 	}
 }
