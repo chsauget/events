@@ -98,7 +98,7 @@
 					{
 						"activity": "DL to DWH_11parallele",
 						"dependencyConditions": [
-							"Succeeded"
+							"Completed"
 						]
 					}
 				],
