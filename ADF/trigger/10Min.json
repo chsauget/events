@@ -1,0 +1,24 @@
+{
+	"name": "10Min",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "Generic SCD Type1",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Minute",
+				"interval": 5,
+				"startTime": "2020-06-28T13:24:00.000Z",
+				"timeZone": "UTC"
+			}
+		}
+	}
+}
