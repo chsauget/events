@@ -70,6 +70,46 @@
 						"type": "Expression"
 					}
 				}
+			},
+			{
+				"name": "DL to DWH_11parallele",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "EP - DL to DWH",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "DL to DWH_11parallele",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "DL to DWH_4parallele",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "DL to DWH_11parallele",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "DL to DWH_4parallele",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
 			}
 		],
 		"parameters": {

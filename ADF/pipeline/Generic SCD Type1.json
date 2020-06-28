@@ -123,7 +123,8 @@
 						"referenceName": "Generic_SCD1",
 						"type": "DataFlowReference",
 						"parameters": {
-							"columns": "'ProductNumber,ProductName,Color,StandardCost,ListPrice,Size'"
+							"columns": "'ProductNumber,ProductName,Color,StandardCost,ListPrice,Size'",
+							"BusinessKey": "'ProductNumber'"
 						},
 						"datasetParameters": {
 							"SrcGeneric": {
