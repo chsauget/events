@@ -8,6 +8,9 @@
 				"pipelineReference": {
 					"referenceName": "Generic SCD Type1",
 					"type": "PipelineReference"
+				},
+				"parameters": {
+					"tableName": "Product"
 				}
 			}
 		],
