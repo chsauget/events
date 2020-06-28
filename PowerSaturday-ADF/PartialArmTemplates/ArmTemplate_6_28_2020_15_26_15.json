@@ -6,1188 +6,12 @@
 			"type": "string",
 			"metadata": "Data Factory name",
 			"defaultValue": "PowerSaturday-ADF"
-		},
-		"AzureBlobStorage1_connectionString": {
-			"type": "secureString",
-			"metadata": "Secure string for 'connectionString' of 'AzureBlobStorage1'"
-		},
-		"SQL_AdventureWork_connectionString": {
-			"type": "secureString",
-			"metadata": "Secure string for 'connectionString' of 'SQL_AdventureWork'"
-		},
-		"SQL_PowerSat_connectionString": {
-			"type": "secureString",
-			"metadata": "Secure string for 'connectionString' of 'SQL_PowerSat'"
-		},
-		"ABFS_DWH_properties_typeProperties_url": {
-			"type": "string",
-			"defaultValue": "https://powersaturdayadl.dfs.core.windows.net"
-		},
-		"HTTP_Azf_properties_typeProperties_url": {
-			"type": "string",
-			"defaultValue": "https://powersaturdayazf.azurewebsites.net"
-		},
-		"S3_Lake_properties_typeProperties_accessKeyId": {
-			"type": "string",
-			"defaultValue": "@{linkedService().S3AccessKeyId}"
 		}
 	},
 	"variables": {
 		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
 	},
 	"resources": [
-		{
-			"name": "[concat(parameters('factoryName'), '/AWS - PullS3')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Web - Vault - awsConnectionBody",
-						"type": "WebActivity",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.00:01:00",
-							"retry": 3,
-							"retryIntervalInSeconds": 60,
-							"secureOutput": true,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"url": {
-								"value": "@concat(pipeline().parameters.KeyVaultUrl\n,'/secrets/S3ConnectionBody?api-version=7.0'\n)",
-								"type": "Expression"
-							},
-							"method": "GET",
-							"headers": {},
-							"authentication": {
-								"type": "MSI",
-								"resource": "https://vault.azure.net"
-							}
-						}
-					},
-					{
-						"name": "LKP - S3 Files",
-						"type": "Lookup",
-						"dependsOn": [
-							{
-								"activity": "Web - Vault - awsConnectionBody",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							},
-							{
-								"activity": "Web - Get Bearer",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "HttpSource",
-								"httpRequestTimeout": "00:01:40"
-							},
-							"dataset": {
-								"referenceName": "HTTP_Glue_Catalog",
-								"type": "DatasetReference",
-								"parameters": {
-									"awsConnectionBody": {
-										"value": "@activity('Web - Vault - awsConnectionBody').output.value",
-										"type": "Expression"
-									},
-									"bearer": {
-										"value": "@activity('WEB - Get Bearer').output.Response",
-										"type": "Expression"
-									},
-									"awsDatabase": {
-										"value": "@pipeline().parameters.awsDatabase",
-										"type": "Expression"
-									}
-								}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
-						"name": "Web - Get Bearer",
-						"type": "WebActivity",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.00:01:00",
-							"retry": 3,
-							"retryIntervalInSeconds": 60,
-							"secureOutput": true,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"url": "https://powersaturdayazf.azurewebsites.net/api/GetBearerFromMSI/c6beb898-053a-4bd7-aaf2-bf0a38440568",
-							"method": "GET",
-							"headers": {},
-							"authentication": {
-								"type": "MSI",
-								"resource": "c6beb898-053a-4bd7-aaf2-bf0a38440568"
-							}
-						}
-					},
-					{
-						"name": "ForEach - Tables",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "LKP - S3 Files",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('LKP - S3 Files').output.Value",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"activities": [
-								{
-									"name": "Copy - AWS - Azure",
-									"type": "Copy",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": true
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "ParquetSource",
-											"storeSettings": {
-												"type": "AmazonS3ReadSettings",
-												"recursive": true,
-												"wildcardFolderPath": {
-													"value": "@{replace(\nitem().StorageDescriptor.Location\n,concat('s3://'\n\t\t,split(\n\t\t\treplace(item().StorageDescriptor.Location,'s3://','')\n\t\t\t,'/')[0]\n\t\t)\n,'')}",
-													"type": "Expression"
-												},
-												"wildcardFileName": "*.parquet",
-												"enablePartitionDiscovery": false
-											}
-										},
-										"sink": {
-											"type": "AzureSqlSink",
-											"preCopyScript": {
-												"value": "@{concat('IF(OBJECT_ID(''dbo.'\n,item().name\n,''') IS NOT NULL)\nBEGIN\n\tTRUNCATE TABLE [dbo].['\n,item().name\n,'] END'\n)}",
-												"type": "Expression"
-											},
-											"tableOption": "autoCreate",
-											"disableMetricsCollection": false
-										},
-										"enableStaging": false,
-										"dataIntegrationUnits": 16
-									},
-									"inputs": [
-										{
-											"referenceName": "S3_Parquet",
-											"type": "DatasetReference",
-											"parameters": {
-												"S3Bucket": {
-													"value": "@split(\nreplace(item().StorageDescriptor.Location,'s3://','')\n,'/')[0]",
-													"type": "Expression"
-												},
-												"S3Path": {
-													"value": "@replace(\nitem().StorageDescriptor.Location\n,concat('s3://'\n\t\t,split(\n\t\t\treplace(item().StorageDescriptor.Location,'s3://','')\n\t\t\t,'/')[0]\n\t\t)\n,'')",
-													"type": "Expression"
-												},
-												"S3AccessKeyId": {
-													"value": "@json(activity('Web - Vault - awsConnectionBody').output.value).awsAccessKeyId",
-													"type": "Expression"
-												},
-												"S3SecretAccessKey": {
-													"value": "@json(activity('Web - Vault - awsConnectionBody').output.value).awsSecretAccessKey",
-													"type": "Expression"
-												}
-											}
-										}
-									],
-									"outputs": [
-										{
-											"referenceName": "SQL_Generic",
-											"type": "DatasetReference",
-											"parameters": {
-												"TableName": {
-													"value": "@item().name",
-													"type": "Expression"
-												},
-												"TableSchema": "dbo"
-											}
-										}
-									]
-								}
-							]
-						}
-					}
-				],
-				"parameters": {
-					"KeyVaultUrl": {
-						"type": "string",
-						"defaultValue": "https://powersaturdayakv.vault.azure.net/"
-					},
-					"awsDatabase": {
-						"type": "string",
-						"defaultValue": "co2impact"
-					}
-				},
-				"variables": {
-					"test": {
-						"type": "String"
-					}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/HTTP_Glue_Catalog')]",
-				"[concat(variables('factoryId'), '/datasets/S3_Parquet')]",
-				"[concat(variables('factoryId'), '/datasets/SQL_Generic')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Azure Analysis Services - Process')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "WEB - Get details of a server",
-						"type": "WebActivity",
-						"dependsOn": [
-							{
-								"activity": "VAR - Set SSASRestAPIURL",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.00:30:00",
-							"retry": 3,
-							"retryIntervalInSeconds": 60,
-							"secureOutput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"url": {
-								"value": "@concat(variables('SSASRestAPIURL')\n,pipeline().parameters.ApiVersion\n)",
-								"type": "Expression"
-							},
-							"method": "GET",
-							"headers": {},
-							"authentication": {
-								"type": "MSI",
-								"resource": "https://management.core.windows.net"
-							}
-						}
-					},
-					{
-						"name": "VAR - Set Server Capacity",
-						"type": "SetVariable",
-						"dependsOn": [
-							{
-								"activity": "WEB - Get details of a server",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"variableName": "ServerCapacity",
-							"value": {
-								"value": "@string(activity('WEB - Get details of a server').output.sku.capacity)",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "VAR - Set Server State",
-						"type": "SetVariable",
-						"dependsOn": [
-							{
-								"activity": "WEB - Get details of a server",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"variableName": "ServerState",
-							"value": {
-								"value": "@activity('WEB - Get details of a server').output.properties.state",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "VAR - Set SSASRestAPIURL",
-						"type": "SetVariable",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"variableName": "SSASRestAPIURL",
-							"value": {
-								"value": "@concat('https://management.azure.com/subscriptions/'\n,pipeline().parameters.SubscriptionId\n,'/resourceGroups/'\n,pipeline().parameters.ResourceGroup\n,'/providers/Microsoft.AnalysisServices/servers/'\n,pipeline().parameters.ServerName)",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "UNTIL - Server Online",
-						"type": "Until",
-						"dependsOn": [
-							{
-								"activity": "IF - Server State is Paused",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@equals(variables('ServerState'),'Succeeded')",
-								"type": "Expression"
-							},
-							"activities": [
-								{
-									"name": "WEB - Get details of a server - Until",
-									"type": "WebActivity",
-									"dependsOn": [
-										{
-											"activity": "Wait - Server Resume",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.00:30:00",
-										"retry": 3,
-										"retryIntervalInSeconds": 60,
-										"secureOutput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"url": {
-											"value": "@concat(variables('SSASRestAPIURL')\n,pipeline().parameters.ApiVersion\n)",
-											"type": "Expression"
-										},
-										"method": "GET",
-										"headers": {},
-										"authentication": {
-											"type": "MSI",
-											"resource": "https://management.core.windows.net"
-										}
-									}
-								},
-								{
-									"name": "VAR - Set Server State - Until",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "WEB - Get details of a server - Until",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "ServerState",
-										"value": {
-											"value": "@activity('WEB - Get details of a server - Until').output.properties.state",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "Wait - Server Resume",
-									"type": "Wait",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"waitTimeInSeconds": 30
-									}
-								}
-							],
-							"timeout": "0.00:30:00"
-						}
-					},
-					{
-						"name": "UNTIL - Separate Querying Pool",
-						"type": "Until",
-						"dependsOn": [
-							{
-								"activity": "IF - QueryPool is not Separated",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@or(equals(variables('QueryPoolSeparated'),'ReadOnly')\n,equals(int(variables('ServerCapacity')),1)\n)",
-								"type": "Expression"
-							},
-							"activities": [
-								{
-									"name": "WEB - Get details of a server - Until separated",
-									"type": "WebActivity",
-									"dependsOn": [
-										{
-											"activity": "Wait - QueryPool to be separated",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.00:30:00",
-										"retry": 3,
-										"retryIntervalInSeconds": 60,
-										"secureOutput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"url": {
-											"value": "@concat(variables('SSASRestAPIURL')\n,pipeline().parameters.ApiVersion\n)",
-											"type": "Expression"
-										},
-										"method": "GET",
-										"headers": {},
-										"authentication": {
-											"type": "MSI",
-											"resource": "https://management.core.windows.net"
-										}
-									}
-								},
-								{
-									"name": "VAR - Set Server State - querypoolConnectionMode",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "WEB - Get details of a server - Until separated",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "QueryPoolSeparated",
-										"value": {
-											"value": "@activity('WEB - Get details of a server - Until separated').output.properties.querypoolConnectionMode",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "Wait - QueryPool to be separated",
-									"type": "Wait",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"waitTimeInSeconds": 30
-									}
-								}
-							],
-							"timeout": "0.01:0:00"
-						}
-					},
-					{
-						"name": "VAR - Set QueryPoolSeparated",
-						"type": "SetVariable",
-						"dependsOn": [
-							{
-								"activity": "UNTIL - Server Online",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"variableName": "QueryPoolSeparated",
-							"value": {
-								"value": "@if(greater(int(variables('ServerCapacity')),1)\n,'All'\n,'ReadOnly'\n)",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "UNTIL - Process End",
-						"type": "Until",
-						"dependsOn": [
-							{
-								"activity": "FILTER - Keep processing refresh",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@not(equals(activity('WEB - Get SSAS Process Status').output.status,'inProgress'))",
-								"type": "Expression"
-							},
-							"activities": [
-								{
-									"name": "WEB - Get SSAS Process Status",
-									"type": "WebActivity",
-									"dependsOn": [
-										{
-											"activity": "WAIT - End of SSAS process",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "7.00:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"url": {
-											"value": "@concat(variables('SSASProcessURL')\n,'/'\n,activity('FILTER - Keep processing refresh').output.Value[0].refreshId\n)",
-											"type": "Expression"
-										},
-										"method": "GET",
-										"headers": {},
-										"authentication": {
-											"type": "MSI",
-											"resource": "https://*.asazure.windows.net"
-										}
-									}
-								},
-								{
-									"name": "WAIT - End of SSAS process",
-									"type": "Wait",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"waitTimeInSeconds": 60
-									}
-								}
-							],
-							"timeout": "0.01:00:00"
-						}
-					},
-					{
-						"name": "VAR - Set SSASProcessURL",
-						"type": "SetVariable",
-						"dependsOn": [
-							{
-								"activity": "UNTIL - Separate Querying Pool",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"variableName": "SSASProcessURL",
-							"value": {
-								"value": "@concat('https://'\n,pipeline().parameters.Region\n,'.asazure.windows.net/servers/'\n,pipeline().parameters.ServerName\n,'/models/'\n,pipeline().parameters.DatabaseName\n,'/refreshes'\n)",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "WEB - Start SSAS Process",
-						"type": "WebActivity",
-						"dependsOn": [
-							{
-								"activity": "VAR - Set SSASProcessURL",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 3,
-							"retryIntervalInSeconds": 60,
-							"secureOutput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"url": {
-								"value": "@variables('SSASProcessURL')",
-								"type": "Expression"
-							},
-							"method": "POST",
-							"headers": {},
-							"body": {
-								"value": "@pipeline().parameters.TSMLProcess",
-								"type": "Expression"
-							},
-							"authentication": {
-								"type": "MSI",
-								"resource": "https://*.asazure.windows.net"
-							}
-						}
-					},
-					{
-						"name": "FILTER - Keep processing refresh",
-						"type": "Filter",
-						"dependsOn": [
-							{
-								"activity": "WEB - Get Process Id",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@json(activity('WEB - Get Process Id').output.Response)",
-								"type": "Expression"
-							},
-							"condition": {
-								"value": "@greaterOrEquals(item().startTime,addseconds(activity('WEB - Start SSAS Process').output.startTime,-30))",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "WEB - Get Process Id",
-						"type": "WebActivity",
-						"dependsOn": [
-							{
-								"activity": "WEB - Start SSAS Process",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"url": {
-								"value": "@variables('SSASProcessURL')",
-								"type": "Expression"
-							},
-							"method": "GET",
-							"headers": {},
-							"authentication": {
-								"type": "MSI",
-								"resource": "https://*.asazure.windows.net"
-							}
-						}
-					},
-					{
-						"name": "IF - Process Failed",
-						"type": "IfCondition",
-						"dependsOn": [
-							{
-								"activity": "UNTIL - Process End",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@equals(activity('WEB - Get SSAS Process Status').output.status,'failed')",
-								"type": "Expression"
-							},
-							"ifTrueActivities": [
-								{
-									"name": "WEB - Throw Error Message on Body",
-									"type": "WebActivity",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "7.00:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"url": {
-											"value": "http://error",
-											"type": "Expression"
-										},
-										"method": "POST",
-										"headers": {},
-										"body": {
-											"value": "@string(activity('WEB - Get SSAS Process Status').output)",
-											"type": "Expression"
-										}
-									}
-								}
-							]
-						}
-					},
-					{
-						"name": "UNTIL - QueryPool is All",
-						"type": "Until",
-						"dependsOn": [
-							{
-								"activity": "IF - QueryPool is Separated - Regroup",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@equals(activity('WEB - Get details of a server - Until All').output.properties.querypoolConnectionMode,'All')\n\n",
-								"type": "Expression"
-							},
-							"activities": [
-								{
-									"name": "WEB - Get details of a server - Until All",
-									"type": "WebActivity",
-									"dependsOn": [
-										{
-											"activity": "Wait - QueryPool - All",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.00:30:00",
-										"retry": 3,
-										"retryIntervalInSeconds": 60,
-										"secureOutput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"url": {
-											"value": "@concat(variables('SSASRestAPIURL')\n,pipeline().parameters.ApiVersion\n)",
-											"type": "Expression"
-										},
-										"method": "GET",
-										"headers": {},
-										"authentication": {
-											"type": "MSI",
-											"resource": "https://management.core.windows.net"
-										}
-									}
-								},
-								{
-									"name": "Wait - QueryPool - All",
-									"type": "Wait",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"waitTimeInSeconds": 30
-									}
-								}
-							],
-							"timeout": "0.01:0:00"
-						}
-					},
-					{
-						"name": "IF - QueryPool is Separated - Regroup",
-						"type": "IfCondition",
-						"dependsOn": [
-							{
-								"activity": "IF - Process Failed",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@equals(variables('QueryPoolSeparated'),'ReadOnly')",
-								"type": "Expression"
-							},
-							"ifTrueActivities": [
-								{
-									"name": "WEB - Group Query Pool",
-									"type": "WebActivity",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.00:30:00",
-										"retry": 3,
-										"retryIntervalInSeconds": 60,
-										"secureOutput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"url": {
-											"value": "@concat(variables('SSASRestAPIURL')\n,pipeline().parameters.ApiVersion\n)",
-											"type": "Expression"
-										},
-										"method": "PATCH",
-										"headers": {},
-										"body": {
-											"properties": {
-												"querypoolConnectionMode": "All"
-											}
-										},
-										"authentication": {
-											"type": "MSI",
-											"resource": "https://management.core.windows.net"
-										}
-									}
-								}
-							]
-						}
-					},
-					{
-						"name": "IF - QueryPool is not Separated",
-						"type": "IfCondition",
-						"dependsOn": [
-							{
-								"activity": "VAR - Set QueryPoolSeparated",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@equals(variables('QueryPoolSeparated'),'All')",
-								"type": "Expression"
-							},
-							"ifTrueActivities": [
-								{
-									"name": "WEB - Separate Query Pool",
-									"type": "WebActivity",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.00:30:00",
-										"retry": 3,
-										"retryIntervalInSeconds": 60,
-										"secureOutput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"url": {
-											"value": "@concat(variables('SSASRestAPIURL')\n,pipeline().parameters.ApiVersion\n)",
-											"type": "Expression"
-										},
-										"method": "PATCH",
-										"headers": {},
-										"body": {
-											"value": "{\"properties\":{\"querypoolConnectionMode\":\"ReadOnly\"}}",
-											"type": "Expression"
-										},
-										"authentication": {
-											"type": "MSI",
-											"resource": "https://management.core.windows.net"
-										}
-									}
-								}
-							]
-						}
-					},
-					{
-						"name": "IF - Server State is Paused",
-						"type": "IfCondition",
-						"dependsOn": [
-							{
-								"activity": "VAR - Set Server Capacity",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							},
-							{
-								"activity": "VAR - Set Server State",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@equals(variables('ServerState'),'Paused')",
-								"type": "Expression"
-							},
-							"ifTrueActivities": [
-								{
-									"name": "WEB - Resume Analysis Services",
-									"type": "WebActivity",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.00:30:00",
-										"retry": 3,
-										"retryIntervalInSeconds": 60,
-										"secureOutput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"url": {
-											"value": "@concat(variables('SSASRestAPIURL')\n,'/resume'\n,pipeline().parameters.ApiVersion\n)",
-											"type": "Expression"
-										},
-										"method": "POST",
-										"headers": {},
-										"body": "'{}'",
-										"authentication": {
-											"type": "MSI",
-											"resource": "https://management.core.windows.net"
-										}
-									}
-								}
-							]
-						}
-					},
-					{
-						"name": "IF - ServerCapacity not 1",
-						"type": "IfCondition",
-						"dependsOn": [
-							{
-								"activity": "UNTIL - QueryPool is All",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@greater(int(variables('ServerCapacity')),1)",
-								"type": "Expression"
-							},
-							"ifTrueActivities": [
-								{
-									"name": "WEB - Synchronize Replica",
-									"type": "WebActivity",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.00:30:00",
-										"retry": 3,
-										"retryIntervalInSeconds": 60,
-										"secureOutput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"url": {
-											"value": "@replace(variables('SSASProcessURL'),'/refreshes','/sync')",
-											"type": "Expression"
-										},
-										"method": "POST",
-										"headers": {},
-										"body": "'{}'",
-										"authentication": {
-											"type": "MSI",
-											"resource": "https://*.asazure.windows.net"
-										}
-									}
-								}
-							]
-						}
-					},
-					{
-						"name": "UNTIL - Synchronization finish",
-						"type": "Until",
-						"dependsOn": [
-							{
-								"activity": "IF - ServerCapacity not 1",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@or(equals(variables('ServerCapacity'),'1')\n,or(equals(activity('WEB - Get Synchronization Status').output.syncstate,2),equals(activity('WEB - Get Synchronization Status').output.syncstate,3))\n)",
-								"type": "Expression"
-							},
-							"activities": [
-								{
-									"name": "WAIT - Synchronization",
-									"type": "Wait",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"waitTimeInSeconds": 30
-									}
-								},
-								{
-									"name": "IF - ServerCapacity not 1 - Sync",
-									"type": "IfCondition",
-									"dependsOn": [
-										{
-											"activity": "WAIT - Synchronization",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"userProperties": [],
-									"typeProperties": {
-										"expression": {
-											"value": "@greater(int(variables('ServerCapacity')),1)",
-											"type": "Expression"
-										},
-										"ifTrueActivities": [
-											{
-												"name": "WEB - Get Synchronization Status",
-												"type": "WebActivity",
-												"dependsOn": [],
-												"policy": {
-													"timeout": "0.00:15:00",
-													"retry": 3,
-													"retryIntervalInSeconds": 60,
-													"secureOutput": false
-												},
-												"userProperties": [],
-												"typeProperties": {
-													"url": {
-														"value": "@replace(variables('SSASProcessURL'),'/refreshes','/sync')",
-														"type": "Expression"
-													},
-													"method": "GET",
-													"headers": {},
-													"body": "sync",
-													"authentication": {
-														"type": "MSI",
-														"resource": "https://*.asazure.windows.net"
-													}
-												}
-											}
-										]
-									}
-								}
-							],
-							"timeout": "0.01:00:00"
-						}
-					},
-					{
-						"name": "IF - Server State was paused",
-						"type": "IfCondition",
-						"dependsOn": [
-							{
-								"activity": "UNTIL - Synchronization finish",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@equals(activity('WEB - Get details of a server').output.properties.state,'Paused')",
-								"type": "Expression"
-							},
-							"ifTrueActivities": [
-								{
-									"name": "WEB - Pause Analysis Services",
-									"type": "WebActivity",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.00:30:00",
-										"retry": 3,
-										"retryIntervalInSeconds": 60,
-										"secureOutput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"url": {
-											"value": "@concat(variables('SSASRestAPIURL')\n,'/Suspend'\n,pipeline().parameters.ApiVersion\n)",
-											"type": "Expression"
-										},
-										"method": "POST",
-										"headers": {},
-										"body": "'{}'",
-										"authentication": {
-											"type": "MSI",
-											"resource": "https://management.core.windows.net"
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"parameters": {
-					"SubscriptionId": {
-						"type": "string",
-						"defaultValue": "xxxxx-xxxx-xxxx-xxxx-xxxxx"
-					},
-					"ResourceGroup": {
-						"type": "string",
-						"defaultValue": "MyRG"
-					},
-					"Region": {
-						"type": "string",
-						"defaultValue": "northeurope"
-					},
-					"ServerName": {
-						"type": "string",
-						"defaultValue": "myssasServer"
-					},
-					"ApiVersion": {
-						"type": "string",
-						"defaultValue": "?api-version=2017-08-01"
-					},
-					"TSMLProcess": {
-						"type": "string",
-						"defaultValue": {
-							"type": "full"
-						}
-					},
-					"DatabaseName": {
-						"type": "string",
-						"defaultValue": "MyTabularDB"
-					}
-				},
-				"variables": {
-					"SSASRestAPIURL": {
-						"type": "String"
-					},
-					"ServerCapacity": {
-						"type": "String"
-					},
-					"ServerState": {
-						"type": "String"
-					},
-					"QueryPoolSeparated": {
-						"type": "String"
-					},
-					"SSASProcessURL": {
-						"type": "String"
-					}
-				},
-				"annotations": []
-			},
-			"dependsOn": []
-		},
 		{
 			"name": "[concat(parameters('factoryName'), '/DL to DWH')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
@@ -1209,15 +33,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -1247,7 +64,6 @@
 							"dataflow": {
 								"referenceName": "DF_SalesOrder",
 								"type": "DataFlowReference",
-								"parameters": {},
 								"datasetParameters": {
 									"SalesOrderDetailAbfs": {
 										"PathDate": {
@@ -1260,13 +76,9 @@
 											"value": "@pipeline().parameters.PathDate",
 											"type": "Expression"
 										}
-									},
-									"ProductDw": {},
-									"ProductAbfs": {},
-									"DestFtSalesOrder": {}
+									}
 								}
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -1311,15 +123,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -1349,7 +154,6 @@
 							"dataflow": {
 								"referenceName": "DF_SalesOrder",
 								"type": "DataFlowReference",
-								"parameters": {},
 								"datasetParameters": {
 									"SalesOrderDetailAbfs": {
 										"PathDate": {
@@ -1362,13 +166,9 @@
 											"value": "@pipeline().parameters.PathDate",
 											"type": "Expression"
 										}
-									},
-									"ProductDw": {},
-									"ProductAbfs": {},
-									"DestFtSalesOrder": {}
+									}
 								}
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -1390,15 +190,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -1420,15 +213,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -1450,15 +236,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -1480,15 +259,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -1510,15 +282,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -1540,15 +305,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -1570,15 +328,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -1600,15 +351,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -1630,15 +374,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -1660,15 +397,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -1690,15 +420,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -1720,15 +443,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -1750,15 +466,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -1780,15 +489,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -1810,15 +512,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -1840,15 +535,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -1870,15 +558,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -1900,15 +581,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -1930,15 +604,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -1960,15 +627,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -2013,15 +673,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -2051,7 +704,6 @@
 							"dataflow": {
 								"referenceName": "DF_SalesOrder",
 								"type": "DataFlowReference",
-								"parameters": {},
 								"datasetParameters": {
 									"SalesOrderDetailAbfs": {
 										"PathDate": {
@@ -2064,13 +716,9 @@
 											"value": "@pipeline().parameters.PathDate",
 											"type": "Expression"
 										}
-									},
-									"ProductDw": {},
-									"ProductAbfs": {},
-									"DestFtSalesOrder": {}
+									}
 								}
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -2092,15 +740,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -2129,15 +770,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -2166,15 +800,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -2196,15 +823,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -2233,15 +853,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -2270,15 +883,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -2300,15 +906,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -2337,15 +936,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -2374,15 +966,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -2411,15 +996,8 @@
 						"typeProperties": {
 							"dataflow": {
 								"referenceName": "DF_Product",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAbfs": {},
-									"ProductDw": {},
-									"DestDimProduct": {}
-								}
+								"type": "DataFlowReference"
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -2596,7 +1174,6 @@
 									}
 								}
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -2615,7 +1192,6 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/SQL_AdventureWork')]",
 				"[concat(variables('factoryId'), '/datasets/ABFS_Dyn')]",
-				"[concat(variables('factoryId'), '/datasets/SQL_Generic')]",
 				"[concat(variables('factoryId'), '/dataflows/Generic_SCD1')]"
 			]
 		},
@@ -2711,8 +1287,7 @@
 								"referenceName": "DL to DWH_11parallele",
 								"type": "PipelineReference"
 							},
-							"waitOnCompletion": true,
-							"parameters": {}
+							"waitOnCompletion": true
 						}
 					},
 					{
@@ -2732,8 +1307,7 @@
 								"referenceName": "DL to DWH_4parallele",
 								"type": "PipelineReference"
 							},
-							"waitOnCompletion": true,
-							"parameters": {}
+							"waitOnCompletion": true
 						}
 					}
 				],
@@ -2758,105 +1332,6 @@
 				"[concat(variables('factoryId'), '/pipelines/DL to DWH')]",
 				"[concat(variables('factoryId'), '/pipelines/DL to DWH_11parallele')]",
 				"[concat(variables('factoryId'), '/pipelines/DL to DWH_4parallele')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Master_Co2Impact')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "DF_SatelliteDatas",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [
-							{
-								"activity": "EP - AWS - PullS3 - co2impact",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "7.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "DF_SatelliteDatas",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"SatelliteCo2": {},
-									"DestDimAnalyticsAxis": {
-										"TableName": "SatelliteData",
-										"TableSchema": "dbo"
-									}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							}
-						}
-					},
-					{
-						"name": "EP - AWS - PullS3 - co2impact",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "AWS - PullS3",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"KeyVaultUrl": "https://powersaturdayakv.vault.azure.net/",
-								"awsDatabase": "co2impact"
-							}
-						}
-					},
-					{
-						"name": "EP - Process SSAS",
-						"type": "ExecutePipeline",
-						"dependsOn": [
-							{
-								"activity": "DF_SatelliteDatas",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "Azure Analysis Services - Process",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"SubscriptionId": "9caff34b-9c30-4dbb-8f87-b3816b522b9c",
-								"ResourceGroup": "PowerSaturday",
-								"Region": "northeurope",
-								"ServerName": "powersat",
-								"TSMLProcess": "{\"type\":\"full\"}",
-								"DatabaseName": "PowerSat"
-							}
-						}
-					}
-				],
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/DF_SatelliteDatas')]",
-				"[concat(variables('factoryId'), '/pipelines/AWS - PullS3')]",
-				"[concat(variables('factoryId'), '/pipelines/Azure Analysis Services - Process')]"
 			]
 		},
 		{
@@ -2967,8 +1442,7 @@
 							},
 							"dataset": {
 								"referenceName": "DWH_paramLoadingLastDate",
-								"type": "DatasetReference",
-								"parameters": {}
+								"type": "DatasetReference"
 							}
 						}
 					},
@@ -3182,19 +1656,15 @@
 							"dataflow": {
 								"referenceName": "DF_Product_Delta",
 								"type": "DataFlowReference",
-								"parameters": {},
 								"datasetParameters": {
 									"ProductDeltaAbfs": {
 										"PathDate": {
 											"value": "@pipeline().parameters.PathDate",
 											"type": "Expression"
 										}
-									},
-									"ProductFullAbfs": {},
-									"DestProductFull": {}
+									}
 								}
 							},
-							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
@@ -3221,130 +1691,8 @@
 				"[concat(variables('factoryId'), '/datasets/DWH_paramLoadingLastDate')]",
 				"[concat(variables('factoryId'), '/datasets/SQL_AdventureWork')]",
 				"[concat(variables('factoryId'), '/datasets/ABFS_Raw')]",
-				"[concat(variables('factoryId'), '/linkedServices/SQL_PowerSat')]",
 				"[concat(variables('factoryId'), '/dataflows/DF_Product_Delta')]",
 				"[concat(variables('factoryId'), '/datasets/ABFS_Staging')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ABFS_C02')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ABFS_DWH",
-					"type": "LinkedServiceReference"
-				},
-				"folder": {
-					"name": "ABFS"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"folderPath": "export/satellite_carbon_dioxide.parquet",
-						"fileSystem": "datawarehouse"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": [
-					{
-						"name": "latitude",
-						"type": "FLOAT"
-					},
-					{
-						"name": "longitude",
-						"type": "FLOAT"
-					},
-					{
-						"name": "solar_zenith_angle",
-						"type": "FLOAT"
-					},
-					{
-						"name": "sensor_zenith_angle",
-						"type": "FLOAT"
-					},
-					{
-						"name": "co2",
-						"type": "FLOAT"
-					},
-					{
-						"name": "co2_uncertainty",
-						"type": "FLOAT"
-					},
-					{
-						"name": "co2_averaging_kernel",
-						"type": "FLOAT"
-					},
-					{
-						"name": "pressure_levels",
-						"type": "FLOAT"
-					},
-					{
-						"name": "pressure_weight",
-						"type": "FLOAT"
-					},
-					{
-						"name": "layer_dim",
-						"type": "INT64"
-					},
-					{
-						"name": "level_dim",
-						"type": "INT64"
-					},
-					{
-						"name": "sounding_dim",
-						"type": "INT64"
-					},
-					{
-						"name": "datetime",
-						"type": "INT96"
-					},
-					{
-						"name": "co2_quality_flag_int",
-						"type": "INT32"
-					},
-					{
-						"name": "filename",
-						"type": "UTF8"
-					},
-					{
-						"name": "year",
-						"type": "INT32"
-					},
-					{
-						"name": "month",
-						"type": "INT32"
-					},
-					{
-						"name": "geoKey",
-						"type": "UTF8"
-					},
-					{
-						"name": "date",
-						"type": "DATE"
-					},
-					{
-						"name": "city",
-						"type": "UTF8"
-					},
-					{
-						"name": "countryCode2",
-						"type": "UTF8"
-					},
-					{
-						"name": "admin1",
-						"type": "UTF8"
-					},
-					{
-						"name": "admin2",
-						"type": "UTF8"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ABFS_DWH')]"
 			]
 		},
 		{
@@ -3933,9 +2281,7 @@
 				},
 				"schema": []
 			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
-			]
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/BlobInputFolder1')]",
@@ -3971,9 +2317,7 @@
 				},
 				"schema": []
 			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
-			]
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/DWH_DimProduct')]",
@@ -4033,9 +2377,7 @@
 					"table": "DimProduct"
 				}
 			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/SQL_PowerSat')]"
-			]
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/DWH_FtSalesOrder')]",
@@ -4123,9 +2465,7 @@
 					"table": "FtSalesOrder"
 				}
 			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/SQL_PowerSat')]"
-			]
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/DWH_paramLoadingLastDate')]",
@@ -4158,66 +2498,7 @@
 					"table": "param_LoadingLastDate"
 				}
 			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/SQL_PowerSat')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/HTTP_Glue_Catalog')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "HTTP_Azf",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"awsConnectionBody": {
-						"type": "object"
-					},
-					"bearer": {
-						"type": "string",
-						"defaultValue": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IllNRUxIVDBndmIwbXhvU0RvWWZvbWpxZmpZVSIsImtpZCI6IllNRUxIVDBndmIwbXhvU0RvWWZvbWpxZmpZVSJ9.eyJhdWQiOiJmOTRiZWZkYi0xMmJkLTRkZmItYTMwOS1kZWYxYjZiYzM3ZGEiLCJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC9iMmVkNDY2Yi0xYWQ1LTRlYTUtYjE5ZS0xMGYyYWJjNDFlN2MvIiwiaWF0IjoxNTg2OTQxNTYwLCJuYmYiOjE1ODY5NDE1NjAsImV4cCI6MTU4NzAyODI2MCwiYWlvIjoiNDJkZ1lEQjV4T3g1MDUvcjdReExvWTdEU2F1OUFRPT0iLCJhcHBpZCI6IjJhMGE2MmFmLTdiMTItNDlkOC05MzllLTM0M2U3OGRmMjIwMCIsImFwcGlkYWNyIjoiMiIsImlkcCI6Imh0dHBzOi8vc3RzLndpbmRvd3MubmV0L2IyZWQ0NjZiLTFhZDUtNGVhNS1iMTllLTEwZjJhYmM0MWU3Yy8iLCJvaWQiOiJiZWIwNzRlYi0xYWQxLTQ5YzktYmU4ZC1kZWY5MmEyZWUzNTQiLCJzdWIiOiJiZWIwNzRlYi0xYWQxLTQ5YzktYmU4ZC1kZWY5MmEyZWUzNTQiLCJ0aWQiOiJiMmVkNDY2Yi0xYWQ1LTRlYTUtYjE5ZS0xMGYyYWJjNDFlN2MiLCJ1dGkiOiJXc3dLR0MzcXNFaUhOa1BIOGlVTUFBIiwidmVyIjoiMS4wIn0.g6ENxAbaxpe7_Jk79fqw3F1PZki6FhMiz6o6h8IdF39fkIq1cWlDzfmddk0gjTc8959gC02lGJ7RSCk_Z0-Fl9ybAMCuPYhwFG1iDN6As5R3oT1LUuc8oIhfahiG48f_kwX8dWihmmT70e4lHW3PlAoR_v2iRxPMjYbeTMUt64bQFtKl7TeXmW0DuIrwDh4cpdEwiJa0qqwd1Hcrxms0kh9cotxUgFLm_rrypfLlDPnLi9hwZqPEPLj8iK46KDBfOFMsIXssSvx81Abpv1cFXXjlt1boBMkUNu3hmhT7s5JuaeTjDwyibl9MJTCKhz64lhLrfKIAb6P2P9vYjfMsDA"
-					},
-					"awsDatabase": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "AWS Lake"
-				},
-				"annotations": [],
-				"type": "HttpFile",
-				"typeProperties": {
-					"format": {
-						"type": "JsonFormat",
-						"filePattern": "arrayOfObjects",
-						"jsonPathDefinition": {
-							"Name": "$.['Name']",
-							"StorageDescriptor.Location": "$.['StorageDescriptor']['Location']"
-						}
-					},
-					"relativeUrl": {
-						"value": "@concat('api/GlueCatalog-ListTables?database='\n,dataset().awsDatabase\n)",
-						"type": "Expression"
-					},
-					"requestMethod": "POST",
-					"additionalHeaders": {
-						"value": "@concat('Authorization: '\n,'Bearer '\n,dataset().bearer)",
-						"type": "Expression"
-					},
-					"requestBody": {
-						"value": "@string(dataset().awsConnectionBody)",
-						"type": "Expression"
-					},
-					"location": {
-						"type": "HttpServerLocation"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/HTTP_Azf')]"
-			]
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/ParameterTable')]",
@@ -4245,9 +2526,7 @@
 					}
 				}
 			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/SQL_AdventureWork')]"
-			]
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/ParameterTable1')]",
@@ -4275,67 +2554,7 @@
 					}
 				}
 			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/SQL_PowerSat')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/S3_Parquet')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "S3_Lake",
-					"type": "LinkedServiceReference",
-					"parameters": {
-						"S3AccessKeyId": {
-							"value": "@dataset().S3AccessKeyId",
-							"type": "Expression"
-						},
-						"S3SecretAccessKey": {
-							"value": "@dataset().S3SecretAccessKey",
-							"type": "Expression"
-						}
-					}
-				},
-				"parameters": {
-					"S3Bucket": {
-						"type": "string"
-					},
-					"S3Path": {
-						"type": "string"
-					},
-					"S3AccessKeyId": {
-						"type": "string"
-					},
-					"S3SecretAccessKey": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "AWS Lake"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AmazonS3Location",
-						"bucketName": {
-							"value": "@dataset().S3Bucket",
-							"type": "Expression"
-						},
-						"folderPath": {
-							"value": "@dataset().S3Path",
-							"type": "Expression"
-						}
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/S3_Lake')]"
-			]
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/SQL_AdventureWork')]",
@@ -4365,48 +2584,7 @@
 					}
 				}
 			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/SQL_AdventureWork')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/SQL_Generic')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "SQL_PowerSat",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"TableName": {
-						"type": "string"
-					},
-					"TableSchema": {
-						"type": "string",
-						"defaultValue": "dbo"
-					}
-				},
-				"folder": {
-					"name": "AWS Lake"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": {
-						"value": "@dataset().TableSchema",
-						"type": "Expression"
-					},
-					"table": {
-						"value": "@dataset().TableName",
-						"type": "Expression"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/SQL_PowerSat')]"
-			]
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/SQL_Product')]",
@@ -4514,9 +2692,7 @@
 					"table": "Product"
 				}
 			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/SQL_AdventureWork')]"
-			]
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/SQL_SalesOrderDetail')]",
@@ -4624,9 +2800,7 @@
 					"table": "SalesOrderDetail"
 				}
 			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/SQL_AdventureWork')]"
-			]
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/SQL_SalesOrderHeader')]",
@@ -4734,9 +2908,7 @@
 					"table": "SalesOrderHeader"
 				}
 			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/SQL_AdventureWork')]"
-			]
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/ABFS_DWH')]",
@@ -4746,84 +2918,7 @@
 				"annotations": [],
 				"type": "AzureBlobFS",
 				"typeProperties": {
-					"url": "[parameters('ABFS_DWH_properties_typeProperties_url')]"
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/AzureBlobStorage1')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "AzureBlobStorage",
-				"typeProperties": {
-					"connectionString": "[parameters('AzureBlobStorage1_connectionString')]"
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/HTTP_Azf')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "HttpServer",
-				"typeProperties": {
-					"url": "[parameters('HTTP_Azf_properties_typeProperties_url')]",
-					"enableServerCertificateValidation": true,
-					"authenticationType": "Anonymous"
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/S3_Lake')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "AmazonS3",
-				"annotations": [],
-				"typeProperties": {
-					"serviceUrl": "",
-					"accessKeyId": "[parameters('S3_Lake_properties_typeProperties_accessKeyId')]",
-					"secretAccessKey": "@{linkedService().S3SecretAccessKey}"
-				},
-				"parameters": {
-					"S3AccessKeyId": {
-						"type": "String"
-					},
-					"S3SecretAccessKey": {
-						"type": "String"
-					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/SQL_AdventureWork')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "AzureSqlDatabase",
-				"typeProperties": {
-					"connectionString": "[parameters('SQL_AdventureWork_connectionString')]"
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/SQL_PowerSat')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "AzureSqlDatabase",
-				"typeProperties": {
-					"connectionString": "[parameters('SQL_PowerSat_connectionString')]"
+					"url": "https://powersaturdayadl.dfs.core.windows.net"
 				}
 			},
 			"dependsOn": []
@@ -4840,8 +2935,7 @@
 						"pipelineReference": {
 							"referenceName": "Generic SCD Type1",
 							"type": "PipelineReference"
-						},
-						"parameters": {}
+						}
 					}
 				],
 				"type": "ScheduleTrigger",
@@ -4856,36 +2950,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/Generic SCD Type1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Daily')]",
-			"type": "Microsoft.DataFactory/factories/triggers",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Started",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "Master_Co2Impact",
-							"type": "PipelineReference"
-						},
-						"parameters": {}
-					}
-				],
-				"type": "ScheduleTrigger",
-				"typeProperties": {
-					"recurrence": {
-						"frequency": "Hour",
-						"interval": 6,
-						"startTime": "2020-06-18T21:40:00.000Z",
-						"timeZone": "UTC"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/Master_Co2Impact')]"
 			]
 		},
 		{
@@ -5101,50 +3165,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/DF_SatelliteDatas')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "ABFS_C02",
-								"type": "DatasetReference"
-							},
-							"name": "SatelliteCo2"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "SQL_Generic",
-								"type": "DatasetReference"
-							},
-							"name": "DestDimAnalyticsAxis"
-						}
-					],
-					"transformations": [
-						{
-							"name": "FilterYear"
-						},
-						{
-							"name": "SelectDimColumns"
-						},
-						{
-							"name": "AggDistinctCoumns"
-						}
-					],
-					"script": "source(output(\n\t\tlatitude as float,\n\t\tlongitude as float,\n\t\tsolar_zenith_angle as float,\n\t\tsensor_zenith_angle as float,\n\t\tco2 as float,\n\t\tco2_uncertainty as float,\n\t\tco2_averaging_kernel as float,\n\t\tpressure_levels as float,\n\t\tpressure_weight as float,\n\t\tlayer_dim as long,\n\t\tlevel_dim as long,\n\t\tsounding_dim as long,\n\t\tdatetime as timestamp,\n\t\tco2_quality_flag_int as integer,\n\t\tfilename as string,\n\t\tyear as integer,\n\t\tmonth as integer,\n\t\tgeoKey as string,\n\t\tdate as date,\n\t\tcity as string,\n\t\tcountryCode2 as string,\n\t\tadmin1 as string,\n\t\tadmin2 as string\n\t),\n\tallowSchemaDrift: false,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> SatelliteCo2\nSatelliteCo2 filter({year}==2016) ~> FilterYear\nFilterYear select(mapColumn(\n\t\tlatitude,\n\t\tlongitude,\n\t\tsolar_zenith_angle,\n\t\tsensor_zenith_angle,\n\t\tlayer_dim,\n\t\tlevel_dim,\n\t\tsounding_dim\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectDimColumns\nSelectDimColumns aggregate(groupBy(latitude,\n\t\tlongitude),\n\teach(match(!in(['latitude','longitude'],name)), $$ = first($$))) ~> AggDistinctCoumns\nAggDistinctCoumns sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> DestDimAnalyticsAxis"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/ABFS_C02')]",
-				"[concat(variables('factoryId'), '/datasets/SQL_Generic')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/Generic_SCD1')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -5198,8 +3218,7 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/ABFS_Dyn')]",
-				"[concat(variables('factoryId'), '/datasets/SQL_Generic')]"
+				"[concat(variables('factoryId'), '/datasets/ABFS_Dyn')]"
 			]
 		},
 		{

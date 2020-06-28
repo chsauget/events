@@ -7,13 +7,21 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "PowerSaturday-ADF"
 		},
+		"AzureBlobStorage1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureBlobStorage1'"
+		},
+		"SQL_AdventureWork_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'SQL_AdventureWork'"
+		},
 		"SQL_PowerSat_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'SQL_PowerSat'"
 		},
 		"ABFS_DWH_properties_typeProperties_url": {
 			"type": "string",
-			"defaultValue": "https://hackathondbk.dfs.core.windows.net"
+			"defaultValue": "https://powersaturdayadl.dfs.core.windows.net"
 		},
 		"HTTP_Azf_properties_typeProperties_url": {
 			"type": "string",
@@ -50,6 +58,12 @@
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
 					},
+					"AzureBlobStorage1_connectionString": {
+						"value": "[parameters('AzureBlobStorage1_connectionString')]"
+					},
+					"SQL_AdventureWork_connectionString": {
+						"value": "[parameters('SQL_AdventureWork_connectionString')]"
+					},
 					"SQL_PowerSat_connectionString": {
 						"value": "[parameters('SQL_PowerSat_connectionString')]"
 					},
@@ -65,6 +79,46 @@
 				}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'ArmTemplate_0')]"
+			]
+		},
+		{
+			"name": "ArmTemplate_2",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_2.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'ArmTemplate_1')]"
+			]
 		}
 	]
 }

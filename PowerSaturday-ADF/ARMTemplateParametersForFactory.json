@@ -5,11 +5,17 @@
 		"factoryName": {
 			"value": "PowerSaturday-ADF"
 		},
+		"AzureBlobStorage1_connectionString": {
+			"value": ""
+		},
+		"SQL_AdventureWork_connectionString": {
+			"value": ""
+		},
 		"SQL_PowerSat_connectionString": {
 			"value": ""
 		},
 		"ABFS_DWH_properties_typeProperties_url": {
-			"value": "https://hackathondbk.dfs.core.windows.net"
+			"value": "https://powersaturdayadl.dfs.core.windows.net"
 		},
 		"HTTP_Azf_properties_typeProperties_url": {
 			"value": "https://powersaturdayazf.azurewebsites.net"

@@ -1,0 +1,2623 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "PowerSaturday-ADF"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/HTTP_Glue_Catalog')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "HTTP_Azf",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"awsConnectionBody": {
+						"type": "object"
+					},
+					"bearer": {
+						"type": "string",
+						"defaultValue": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IllNRUxIVDBndmIwbXhvU0RvWWZvbWpxZmpZVSIsImtpZCI6IllNRUxIVDBndmIwbXhvU0RvWWZvbWpxZmpZVSJ9.eyJhdWQiOiJmOTRiZWZkYi0xMmJkLTRkZmItYTMwOS1kZWYxYjZiYzM3ZGEiLCJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC9iMmVkNDY2Yi0xYWQ1LTRlYTUtYjE5ZS0xMGYyYWJjNDFlN2MvIiwiaWF0IjoxNTg2OTQxNTYwLCJuYmYiOjE1ODY5NDE1NjAsImV4cCI6MTU4NzAyODI2MCwiYWlvIjoiNDJkZ1lEQjV4T3g1MDUvcjdReExvWTdEU2F1OUFRPT0iLCJhcHBpZCI6IjJhMGE2MmFmLTdiMTItNDlkOC05MzllLTM0M2U3OGRmMjIwMCIsImFwcGlkYWNyIjoiMiIsImlkcCI6Imh0dHBzOi8vc3RzLndpbmRvd3MubmV0L2IyZWQ0NjZiLTFhZDUtNGVhNS1iMTllLTEwZjJhYmM0MWU3Yy8iLCJvaWQiOiJiZWIwNzRlYi0xYWQxLTQ5YzktYmU4ZC1kZWY5MmEyZWUzNTQiLCJzdWIiOiJiZWIwNzRlYi0xYWQxLTQ5YzktYmU4ZC1kZWY5MmEyZWUzNTQiLCJ0aWQiOiJiMmVkNDY2Yi0xYWQ1LTRlYTUtYjE5ZS0xMGYyYWJjNDFlN2MiLCJ1dGkiOiJXc3dLR0MzcXNFaUhOa1BIOGlVTUFBIiwidmVyIjoiMS4wIn0.g6ENxAbaxpe7_Jk79fqw3F1PZki6FhMiz6o6h8IdF39fkIq1cWlDzfmddk0gjTc8959gC02lGJ7RSCk_Z0-Fl9ybAMCuPYhwFG1iDN6As5R3oT1LUuc8oIhfahiG48f_kwX8dWihmmT70e4lHW3PlAoR_v2iRxPMjYbeTMUt64bQFtKl7TeXmW0DuIrwDh4cpdEwiJa0qqwd1Hcrxms0kh9cotxUgFLm_rrypfLlDPnLi9hwZqPEPLj8iK46KDBfOFMsIXssSvx81Abpv1cFXXjlt1boBMkUNu3hmhT7s5JuaeTjDwyibl9MJTCKhz64lhLrfKIAb6P2P9vYjfMsDA"
+					},
+					"awsDatabase": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "AWS Lake"
+				},
+				"annotations": [],
+				"type": "HttpFile",
+				"typeProperties": {
+					"format": {
+						"type": "JsonFormat",
+						"filePattern": "arrayOfObjects",
+						"jsonPathDefinition": {
+							"Name": "$.['Name']",
+							"StorageDescriptor.Location": "$.['StorageDescriptor']['Location']"
+						}
+					},
+					"relativeUrl": {
+						"value": "@concat('api/GlueCatalog-ListTables?database='\n,dataset().awsDatabase\n)",
+						"type": "Expression"
+					},
+					"requestMethod": "POST",
+					"additionalHeaders": {
+						"value": "@concat('Authorization: '\n,'Bearer '\n,dataset().bearer)",
+						"type": "Expression"
+					},
+					"requestBody": {
+						"value": "@string(dataset().awsConnectionBody)",
+						"type": "Expression"
+					},
+					"location": {
+						"type": "HttpServerLocation"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ParameterTable')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SQL_AdventureWork",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"tablename": {
+						"type": "string",
+						"defaultValue": "DimProducts"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": {
+						"value": "@dataset().tablename",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ParameterTable1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SQL_PowerSat",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"tablename": {
+						"type": "string",
+						"defaultValue": "DimProducts"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": {
+						"value": "@dataset().tablename",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/S3_Parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "S3_Lake",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"S3AccessKeyId": {
+							"value": "@dataset().S3AccessKeyId",
+							"type": "Expression"
+						},
+						"S3SecretAccessKey": {
+							"value": "@dataset().S3SecretAccessKey",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"S3Bucket": {
+						"type": "string"
+					},
+					"S3Path": {
+						"type": "string"
+					},
+					"S3AccessKeyId": {
+						"type": "string"
+					},
+					"S3SecretAccessKey": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "AWS Lake"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AmazonS3Location",
+						"bucketName": {
+							"value": "@dataset().S3Bucket",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().S3Path",
+							"type": "Expression"
+						}
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQL_AdventureWork')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SQL_AdventureWork",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"table": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "SCD Gen"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "SalesLT",
+					"table": {
+						"value": "@dataset().table",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQL_Generic')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SQL_PowerSat",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"TableName": {
+						"type": "string"
+					},
+					"TableSchema": {
+						"type": "string",
+						"defaultValue": "dbo"
+					}
+				},
+				"folder": {
+					"name": "AWS Lake"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().TableSchema",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().TableName",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQL_Product')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SQL_AdventureWork",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Dataflow Meetup/SQL"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "ProductID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Name",
+						"type": "nvarchar"
+					},
+					{
+						"name": "ProductNumber",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Color",
+						"type": "nvarchar"
+					},
+					{
+						"name": "StandardCost",
+						"type": "money",
+						"precision": 19,
+						"scale": 4
+					},
+					{
+						"name": "ListPrice",
+						"type": "money",
+						"precision": 19,
+						"scale": 4
+					},
+					{
+						"name": "Size",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Weight",
+						"type": "decimal",
+						"precision": 8,
+						"scale": 2
+					},
+					{
+						"name": "ProductCategoryID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ProductModelID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "SellStartDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "SellEndDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "DiscontinuedDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "ThumbNailPhoto",
+						"type": "varbinary"
+					},
+					{
+						"name": "ThumbnailPhotoFileName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "rowguid",
+						"type": "uniqueidentifier"
+					},
+					{
+						"name": "ModifiedDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "SalesLT",
+					"table": "Product"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQL_SalesOrderDetail')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SQL_AdventureWork",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Dataflow Meetup/SQL"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "ProductID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Name",
+						"type": "nvarchar"
+					},
+					{
+						"name": "ProductNumber",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Color",
+						"type": "nvarchar"
+					},
+					{
+						"name": "StandardCost",
+						"type": "money",
+						"precision": 19,
+						"scale": 4
+					},
+					{
+						"name": "ListPrice",
+						"type": "money",
+						"precision": 19,
+						"scale": 4
+					},
+					{
+						"name": "Size",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Weight",
+						"type": "decimal",
+						"precision": 8,
+						"scale": 2
+					},
+					{
+						"name": "ProductCategoryID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ProductModelID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "SellStartDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "SellEndDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "DiscontinuedDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "ThumbNailPhoto",
+						"type": "varbinary"
+					},
+					{
+						"name": "ThumbnailPhotoFileName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "rowguid",
+						"type": "uniqueidentifier"
+					},
+					{
+						"name": "ModifiedDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "SalesLT",
+					"table": "SalesOrderDetail"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQL_SalesOrderHeader')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SQL_AdventureWork",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Dataflow Meetup/SQL"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "ProductID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Name",
+						"type": "nvarchar"
+					},
+					{
+						"name": "ProductNumber",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Color",
+						"type": "nvarchar"
+					},
+					{
+						"name": "StandardCost",
+						"type": "money",
+						"precision": 19,
+						"scale": 4
+					},
+					{
+						"name": "ListPrice",
+						"type": "money",
+						"precision": 19,
+						"scale": 4
+					},
+					{
+						"name": "Size",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Weight",
+						"type": "decimal",
+						"precision": 8,
+						"scale": 2
+					},
+					{
+						"name": "ProductCategoryID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ProductModelID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "SellStartDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "SellEndDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "DiscontinuedDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "ThumbNailPhoto",
+						"type": "varbinary"
+					},
+					{
+						"name": "ThumbnailPhotoFileName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "rowguid",
+						"type": "uniqueidentifier"
+					},
+					{
+						"name": "ModifiedDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "SalesLT",
+					"table": "SalesOrderHeader"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AWS - PullS3')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Web - Vault - awsConnectionBody",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:01:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 60,
+							"secureOutput": true,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"url": {
+								"value": "@concat(pipeline().parameters.KeyVaultUrl\n,'/secrets/S3ConnectionBody?api-version=7.0'\n)",
+								"type": "Expression"
+							},
+							"method": "GET",
+							"headers": {},
+							"authentication": {
+								"type": "MSI",
+								"resource": "https://vault.azure.net"
+							}
+						}
+					},
+					{
+						"name": "LKP - S3 Files",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "Web - Vault - awsConnectionBody",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "Web - Get Bearer",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "HttpSource",
+								"httpRequestTimeout": "00:01:40"
+							},
+							"dataset": {
+								"referenceName": "HTTP_Glue_Catalog",
+								"type": "DatasetReference",
+								"parameters": {
+									"awsConnectionBody": {
+										"value": "@activity('Web - Vault - awsConnectionBody').output.value",
+										"type": "Expression"
+									},
+									"bearer": {
+										"value": "@activity('WEB - Get Bearer').output.Response",
+										"type": "Expression"
+									},
+									"awsDatabase": {
+										"value": "@pipeline().parameters.awsDatabase",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "Web - Get Bearer",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:01:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 60,
+							"secureOutput": true,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"url": "https://powersaturdayazf.azurewebsites.net/api/GetBearerFromMSI/c6beb898-053a-4bd7-aaf2-bf0a38440568",
+							"method": "GET",
+							"headers": {},
+							"authentication": {
+								"type": "MSI",
+								"resource": "c6beb898-053a-4bd7-aaf2-bf0a38440568"
+							}
+						}
+					},
+					{
+						"name": "ForEach - Tables",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "LKP - S3 Files",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('LKP - S3 Files').output.Value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"activities": [
+								{
+									"name": "Copy - AWS - Azure",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": true
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "ParquetSource",
+											"storeSettings": {
+												"type": "AmazonS3ReadSettings",
+												"recursive": true,
+												"wildcardFolderPath": {
+													"value": "@{replace(\nitem().StorageDescriptor.Location\n,concat('s3://'\n\t\t,split(\n\t\t\treplace(item().StorageDescriptor.Location,'s3://','')\n\t\t\t,'/')[0]\n\t\t)\n,'')}",
+													"type": "Expression"
+												},
+												"wildcardFileName": "*.parquet",
+												"enablePartitionDiscovery": false
+											}
+										},
+										"sink": {
+											"type": "AzureSqlSink",
+											"preCopyScript": {
+												"value": "@{concat('IF(OBJECT_ID(''dbo.'\n,item().name\n,''') IS NOT NULL)\nBEGIN\n\tTRUNCATE TABLE [dbo].['\n,item().name\n,'] END'\n)}",
+												"type": "Expression"
+											},
+											"tableOption": "autoCreate",
+											"disableMetricsCollection": false
+										},
+										"enableStaging": false,
+										"dataIntegrationUnits": 16
+									},
+									"inputs": [
+										{
+											"referenceName": "S3_Parquet",
+											"type": "DatasetReference",
+											"parameters": {
+												"S3Bucket": {
+													"value": "@split(\nreplace(item().StorageDescriptor.Location,'s3://','')\n,'/')[0]",
+													"type": "Expression"
+												},
+												"S3Path": {
+													"value": "@replace(\nitem().StorageDescriptor.Location\n,concat('s3://'\n\t\t,split(\n\t\t\treplace(item().StorageDescriptor.Location,'s3://','')\n\t\t\t,'/')[0]\n\t\t)\n,'')",
+													"type": "Expression"
+												},
+												"S3AccessKeyId": {
+													"value": "@json(activity('Web - Vault - awsConnectionBody').output.value).awsAccessKeyId",
+													"type": "Expression"
+												},
+												"S3SecretAccessKey": {
+													"value": "@json(activity('Web - Vault - awsConnectionBody').output.value).awsSecretAccessKey",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "SQL_Generic",
+											"type": "DatasetReference",
+											"parameters": {
+												"TableName": {
+													"value": "@item().name",
+													"type": "Expression"
+												},
+												"TableSchema": "dbo"
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"parameters": {
+					"KeyVaultUrl": {
+						"type": "string",
+						"defaultValue": "https://powersaturdayakv.vault.azure.net/"
+					},
+					"awsDatabase": {
+						"type": "string",
+						"defaultValue": "co2impact"
+					}
+				},
+				"variables": {
+					"test": {
+						"type": "String"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/HTTP_Glue_Catalog')]",
+				"[concat(variables('factoryId'), '/datasets/S3_Parquet')]",
+				"[concat(variables('factoryId'), '/datasets/SQL_Generic')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_Product')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "Dataflow Meetup"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ABFS_Product_Full",
+								"type": "DatasetReference"
+							},
+							"name": "ProductAbfs"
+						},
+						{
+							"dataset": {
+								"referenceName": "DWH_DimProduct",
+								"type": "DatasetReference"
+							},
+							"name": "ProductDw"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DWH_DimProduct",
+								"type": "DatasetReference"
+							},
+							"name": "DestDimProduct"
+						}
+					],
+					"transformations": [
+						{
+							"name": "SelectDimColumns"
+						},
+						{
+							"name": "DerHash"
+						},
+						{
+							"name": "SelectDwColumns"
+						},
+						{
+							"name": "JoinDw"
+						},
+						{
+							"name": "FilterPerimetre"
+						},
+						{
+							"name": "AlterRow"
+						}
+					],
+					"script": "source(output(\n\t\tProductID as integer,\n\t\tName as string,\n\t\tProductNumber as string,\n\t\tColor as string,\n\t\tStandardCost as decimal(19,4),\n\t\tListPrice as decimal(19,4),\n\t\tSize as string,\n\t\tWeight as decimal(8,2),\n\t\tProductCategoryID as integer,\n\t\tProductModelID as integer,\n\t\tSellStartDate as timestamp,\n\t\tSellEndDate as timestamp,\n\t\tDiscontinuedDate as timestamp,\n\t\tThumbNailPhoto as binary,\n\t\tThumbnailPhotoFileName as string,\n\t\trowguid as string,\n\t\tModifiedDate as timestamp\n\t),\n\tallowSchemaDrift: false,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> ProductAbfs\nsource(output(\n\t\tProductId as integer,\n\t\tHash as string,\n\t\tProductNumber as string,\n\t\tProductName as string,\n\t\tColor as string,\n\t\tStandardCost as decimal(19,4),\n\t\tListPrice as decimal(19,4),\n\t\tSize as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> ProductDw\nProductAbfs select(mapColumn(\n\t\tProductName = Name,\n\t\tProductNumber,\n\t\tColor,\n\t\tStandardCost,\n\t\tListPrice,\n\t\tSize\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectDimColumns\nSelectDimColumns derive(Hash = sha2(256,ProductName,ProductNumber,Color,StandardCost,ListPrice,Size)) ~> DerHash\nProductDw select(mapColumn(\n\t\tdw_ProductNumber = ProductNumber,\n\t\tdw_Hash = Hash\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectDwColumns\nDerHash, SelectDwColumns join(ProductNumber == dw_ProductNumber,\n\tjoinType:'left',\n\tbroadcast: 'auto')~> JoinDw\nJoinDw filter(Hash != dw_Hash) ~> FilterPerimetre\nFilterPerimetre alterRow(upsertIf(true())) ~> AlterRow\nAlterRow sink(input(\n\t\tProductId as integer,\n\t\tHash as string,\n\t\tProductNumber as string,\n\t\tProductName as string,\n\t\tColor as string,\n\t\tStandardCost as decimal(19,4),\n\t\tListPrice as decimal(19,4),\n\t\tSize as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:false,\n\tupdateable:false,\n\tupsertable:true,\n\tkeys:['ProductNumber'],\n\tformat: 'table',\n\tmapColumn(\n\t\tHash,\n\t\tProductNumber,\n\t\tProductName,\n\t\tColor,\n\t\tStandardCost,\n\t\tListPrice,\n\t\tSize\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> DestDimProduct"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_Product_Delta')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "Dataflow Meetup"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ABFS_Product_Delta",
+								"type": "DatasetReference"
+							},
+							"name": "ProductDeltaAbfs"
+						},
+						{
+							"dataset": {
+								"referenceName": "ABFS_Product_Full",
+								"type": "DatasetReference"
+							},
+							"name": "ProductFullAbfs"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ABFS_Product_Full",
+								"type": "DatasetReference"
+							},
+							"name": "DestProductFull"
+						}
+					],
+					"transformations": [
+						{
+							"name": "DerFileNameDelta"
+						},
+						{
+							"name": "DerFileNameFull"
+						},
+						{
+							"name": "UnionProduct"
+						},
+						{
+							"name": "WindowSort"
+						},
+						{
+							"name": "FilterNewRows"
+						},
+						{
+							"name": "AlterRow"
+						}
+					],
+					"script": "source(output(\n\t\tProductID as integer,\n\t\tName as string,\n\t\tProductNumber as string,\n\t\tColor as string,\n\t\tStandardCost as decimal(19,4),\n\t\tListPrice as decimal(19,4),\n\t\tSize as string,\n\t\tWeight as decimal(8,2),\n\t\tProductCategoryID as integer,\n\t\tProductModelID as integer,\n\t\tSellStartDate as timestamp,\n\t\tSellEndDate as timestamp,\n\t\tDiscontinuedDate as timestamp,\n\t\tThumbNailPhoto as binary,\n\t\tThumbnailPhotoFileName as string,\n\t\trowguid as string,\n\t\tModifiedDate as timestamp\n\t),\n\tallowSchemaDrift: false,\n\tvalidateSchema: false,\n\trowUrlColumn: 'Path',\n\tformat: 'parquet') ~> ProductDeltaAbfs\nsource(output(\n\t\tProductID as integer,\n\t\tName as string,\n\t\tProductNumber as string,\n\t\tColor as string,\n\t\tStandardCost as decimal(19,4),\n\t\tListPrice as decimal(19,4),\n\t\tSize as string,\n\t\tWeight as decimal(8,2),\n\t\tProductCategoryID as integer,\n\t\tProductModelID as integer,\n\t\tSellStartDate as timestamp,\n\t\tSellEndDate as timestamp,\n\t\tDiscontinuedDate as timestamp,\n\t\tThumbNailPhoto as binary,\n\t\tThumbnailPhotoFileName as string,\n\t\trowguid as string,\n\t\tModifiedDate as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\trowUrlColumn: 'Path',\n\tformat: 'parquet') ~> ProductFullAbfs\nProductDeltaAbfs derive(FileName = regexExtract(Path, `([^/]+)(?=\\.\\w)`)) ~> DerFileNameDelta\nProductFullAbfs derive(FileName = regexExtract(Path, `([^/]+)(?=\\.\\w)`)) ~> DerFileNameFull\nDerFileNameDelta, DerFileNameFull union(byName: true)~> UnionProduct\nUnionProduct window(over(FileName,\n\t\tProductID),\n\tdesc(ModifiedDate, true),\n\trank = rowNumber()) ~> WindowSort\nWindowSort filter(rank == 1) ~> FilterNewRows\nFilterNewRows alterRow(insertIf(true())) ~> AlterRow\nAlterRow sink(input(\n\t\tProductID as integer,\n\t\tName as string,\n\t\tProductNumber as string,\n\t\tColor as string,\n\t\tStandardCost as decimal(19,4),\n\t\tListPrice as decimal(19,4),\n\t\tSize as string,\n\t\tWeight as decimal(8,2),\n\t\tProductCategoryID as integer,\n\t\tProductModelID as integer,\n\t\tSellStartDate as timestamp,\n\t\tSellEndDate as timestamp,\n\t\tDiscontinuedDate as timestamp,\n\t\tThumbNailPhoto as binary,\n\t\tThumbnailPhotoFileName as string,\n\t\trowguid as string,\n\t\tModifiedDate as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet',\n\trowUrlColumn:'Path',\n\tmapColumn(\n\t\tProductID,\n\t\tName,\n\t\tProductNumber,\n\t\tColor,\n\t\tStandardCost,\n\t\tListPrice,\n\t\tSize,\n\t\tWeight,\n\t\tProductCategoryID,\n\t\tProductModelID,\n\t\tSellStartDate,\n\t\tSellEndDate,\n\t\tDiscontinuedDate,\n\t\trowguid,\n\t\tModifiedDate,\n\t\tPath,\n\t\tFileName,\n\t\trank\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> DestProductFull"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_SalesOrder')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "Dataflow Meetup"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ABFS_SalesOrderDetail",
+								"type": "DatasetReference"
+							},
+							"name": "SalesOrderDetailAbfs"
+						},
+						{
+							"dataset": {
+								"referenceName": "ABFS_SalesOrderHeader",
+								"type": "DatasetReference"
+							},
+							"name": "SalesOrderHeaderAbfs"
+						},
+						{
+							"dataset": {
+								"referenceName": "DWH_DimProduct",
+								"type": "DatasetReference"
+							},
+							"name": "ProductDw"
+						},
+						{
+							"dataset": {
+								"referenceName": "ABFS_Product_Full",
+								"type": "DatasetReference"
+							},
+							"name": "ProductAbfs"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DWH_FtSalesOrder",
+								"type": "DatasetReference"
+							},
+							"name": "DestFtSalesOrder"
+						}
+					],
+					"transformations": [
+						{
+							"name": "SelectSalesOrderDetailsAbfs"
+						},
+						{
+							"name": "SelectSalesOrderHeaderAbfs"
+						},
+						{
+							"name": "SelectProductDw"
+						},
+						{
+							"name": "JoinSalesOrderHeader"
+						},
+						{
+							"name": "JoinProduct"
+						},
+						{
+							"name": "AlterRow"
+						},
+						{
+							"name": "SelectProductAbfs"
+						},
+						{
+							"name": "JoinProductDwAbfs"
+						}
+					],
+					"script": "source(output(\n\t\tSalesOrderID as integer,\n\t\tSalesOrderDetailID as integer,\n\t\tOrderQty as integer,\n\t\tProductID as integer,\n\t\tUnitPrice as decimal(19,4),\n\t\tUnitPriceDiscount as decimal(19,4),\n\t\tLineTotal as decimal(38,6),\n\t\trowguid as string,\n\t\tModifiedDate as timestamp\n\t),\n\tallowSchemaDrift: false,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> SalesOrderDetailAbfs\nsource(output(\n\t\tSalesOrderID as integer,\n\t\tRevisionNumber as integer,\n\t\tOrderDate as timestamp,\n\t\tDueDate as timestamp,\n\t\tShipDate as timestamp,\n\t\tStatus as integer,\n\t\tOnlineOrderFlag as boolean,\n\t\tSalesOrderNumber as string,\n\t\tPurchaseOrderNumber as string,\n\t\tAccountNumber as string,\n\t\tCustomerID as integer,\n\t\tShipToAddressID as integer,\n\t\tBillToAddressID as integer,\n\t\tShipMethod as string,\n\t\tCreditCardApprovalCode as string,\n\t\tSubTotal as decimal(19,4),\n\t\tTaxAmt as decimal(19,4),\n\t\tFreight as decimal(19,4),\n\t\tTotalDue as decimal(19,4),\n\t\tComment as string,\n\t\trowguid as string,\n\t\tModifiedDate as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> SalesOrderHeaderAbfs\nsource(output(\n\t\tProductId as integer,\n\t\tHash as string,\n\t\tProductNumber as string,\n\t\tProductName as string,\n\t\tColor as string,\n\t\tStandardCost as decimal(19,4),\n\t\tListPrice as decimal(19,4),\n\t\tSize as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> ProductDw\nsource(output(\n\t\tProductID as integer,\n\t\tName as string,\n\t\tProductNumber as string,\n\t\tColor as string,\n\t\tStandardCost as decimal(19,4),\n\t\tListPrice as decimal(19,4),\n\t\tSize as string,\n\t\tWeight as decimal(8,2),\n\t\tProductCategoryID as integer,\n\t\tProductModelID as integer,\n\t\tSellStartDate as timestamp,\n\t\tSellEndDate as timestamp,\n\t\tDiscontinuedDate as timestamp,\n\t\tThumbNailPhoto as binary,\n\t\tThumbnailPhotoFileName as string,\n\t\trowguid as string,\n\t\tModifiedDate as timestamp\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> ProductAbfs\nSalesOrderDetailAbfs select(mapColumn(\n\t\tSalesOrderID,\n\t\tSalesOrderDetailID,\n\t\tOrderQty,\n\t\tProductID,\n\t\tUnitPrice,\n\t\tUnitPriceDiscount,\n\t\tLineTotal\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectSalesOrderDetailsAbfs\nSalesOrderHeaderAbfs select(mapColumn(\n\t\tSalesOrderID,\n\t\tRevisionNumber,\n\t\tOrderDate,\n\t\tDueDate,\n\t\tShipDate,\n\t\tStatus,\n\t\tOnlineOrderFlag,\n\t\tSalesOrderNumber,\n\t\tPurchaseOrderNumber,\n\t\tAccountNumber,\n\t\tShipMethod,\n\t\tCreditCardApprovalCode,\n\t\tSubTotal,\n\t\tTaxAmt,\n\t\tFreight,\n\t\tTotalDue,\n\t\tComment\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectSalesOrderHeaderAbfs\nProductDw select(mapColumn(\n\t\tdw_ProductId = ProductId,\n\t\tdw_ProductNumber = ProductNumber\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectProductDw\nSelectSalesOrderDetailsAbfs, SelectSalesOrderHeaderAbfs join(SelectSalesOrderDetailsAbfs@SalesOrderID == SelectSalesOrderHeaderAbfs@SalesOrderID,\n\tjoinType:'inner',\n\tbroadcast: 'auto')~> JoinSalesOrderHeader\nJoinSalesOrderHeader, JoinProductDwAbfs join(ProductID == dl_ProductID,\n\tjoinType:'inner',\n\tbroadcast: 'auto')~> JoinProduct\nJoinProduct alterRow(insertIf(true())) ~> AlterRow\nProductAbfs select(mapColumn(\n\t\tdl_ProductID = ProductID,\n\t\tdl_ProductNumber = ProductNumber\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectProductAbfs\nSelectProductDw, SelectProductAbfs join(dw_ProductNumber == dl_ProductNumber,\n\tjoinType:'inner',\n\tbroadcast: 'auto')~> JoinProductDwAbfs\nAlterRow sink(input(\n\t\tOrderQty as integer,\n\t\tProductID as integer,\n\t\tUnitPrice as decimal(19,4),\n\t\tUnitPriceDiscount as decimal(19,4),\n\t\tStatus as integer,\n\t\tOnlineOrderFlag as boolean,\n\t\tPurchaseOrderNumber as string,\n\t\tAccountNumber as string,\n\t\tShipMethod as string,\n\t\tCreditCardApprovalCode as string,\n\t\tSubTotal as decimal(19,4),\n\t\tTaxAmt as decimal(19,4),\n\t\tFreight as decimal(19,4)\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\ttruncate:true,\n\tformat: 'table',\n\tmapColumn(\n\t\tOrderQty,\n\t\tProductID = dw_ProductId,\n\t\tUnitPrice,\n\t\tUnitPriceDiscount,\n\t\tStatus,\n\t\tOnlineOrderFlag,\n\t\tPurchaseOrderNumber,\n\t\tAccountNumber,\n\t\tShipMethod,\n\t\tCreditCardApprovalCode,\n\t\tSubTotal,\n\t\tTaxAmt,\n\t\tFreight\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> DestFtSalesOrder"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_SatelliteDatas')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ABFS_C02",
+								"type": "DatasetReference"
+							},
+							"name": "SatelliteCo2"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "SQL_Generic",
+								"type": "DatasetReference"
+							},
+							"name": "DestDimAnalyticsAxis"
+						}
+					],
+					"transformations": [
+						{
+							"name": "FilterYear"
+						},
+						{
+							"name": "SelectDimColumns"
+						},
+						{
+							"name": "AggDistinctCoumns"
+						}
+					],
+					"script": "source(output(\n\t\tlatitude as float,\n\t\tlongitude as float,\n\t\tsolar_zenith_angle as float,\n\t\tsensor_zenith_angle as float,\n\t\tco2 as float,\n\t\tco2_uncertainty as float,\n\t\tco2_averaging_kernel as float,\n\t\tpressure_levels as float,\n\t\tpressure_weight as float,\n\t\tlayer_dim as long,\n\t\tlevel_dim as long,\n\t\tsounding_dim as long,\n\t\tdatetime as timestamp,\n\t\tco2_quality_flag_int as integer,\n\t\tfilename as string,\n\t\tyear as integer,\n\t\tmonth as integer,\n\t\tgeoKey as string,\n\t\tdate as date,\n\t\tcity as string,\n\t\tcountryCode2 as string,\n\t\tadmin1 as string,\n\t\tadmin2 as string\n\t),\n\tallowSchemaDrift: false,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> SatelliteCo2\nSatelliteCo2 filter({year}==2016) ~> FilterYear\nFilterYear select(mapColumn(\n\t\tlatitude,\n\t\tlongitude,\n\t\tsolar_zenith_angle,\n\t\tsensor_zenith_angle,\n\t\tlayer_dim,\n\t\tlevel_dim,\n\t\tsounding_dim\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectDimColumns\nSelectDimColumns aggregate(groupBy(latitude,\n\t\tlongitude),\n\teach(match(!in(['latitude','longitude'],name)), $$ = first($$))) ~> AggDistinctCoumns\nAggDistinctCoumns sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> DestDimAnalyticsAxis"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/SQL_Generic')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Generic_SCD1')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ABFS_Dyn",
+								"type": "DatasetReference"
+							},
+							"name": "SrcGeneric"
+						},
+						{
+							"dataset": {
+								"referenceName": "SQL_Generic",
+								"type": "DatasetReference"
+							},
+							"name": "DimGeneric"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "SQL_Generic",
+								"type": "DatasetReference"
+							},
+							"name": "sinkDimGeneric"
+						}
+					],
+					"transformations": [
+						{
+							"name": "DrvHash",
+							"description": "Creating/updating the columns 'HashedColumns'\n\nsha2(256,columns()) could be used"
+						},
+						{
+							"name": "LKPExists"
+						},
+						{
+							"name": "ConditionalSplit1"
+						},
+						{
+							"name": "AlterRowUpsert"
+						},
+						{
+							"name": "SelectDimKeys"
+						}
+					],
+					"script": "parameters{\n\tcolumns as string ('ProductNumber,ProductName,Color,StandardCost,ListPrice,Size'),\n\tBusinessKey as string ('ProductNumber')\n}\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet') ~> SrcGeneric\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> DimGeneric\nSrcGeneric derive(Hash = sha2(256,byNames(split($columns,',')))) ~> DrvHash\nDrvHash, SelectDimKeys lookup(Hash == byName('Hash_dim'),\n\tmultiple: false,\n\tpickup: 'any',\n\tbroadcast: 'auto')~> LKPExists\nLKPExists split(isMatch(),\n\tdisjoint: false) ~> ConditionalSplit1@(ExistingRows, NewOrUpdatedRows)\nConditionalSplit1@NewOrUpdatedRows alterRow(upsertIf(true())) ~> AlterRowUpsert\nDimGeneric select(mapColumn(\n\t\teach(patternMatch(`Hash`),\n\t\t\tconcat($$,'_dim') = $$)\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectDimKeys\nAlterRowUpsert sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:false,\n\tupdateable:false,\n\tupsertable:true,\n\tkeys:[($BusinessKey)],\n\tformat: 'table',\n\tmapColumn(\n\t\teach(patternMatch(`^((?!_dim).)*$`))\n\t)) ~> sinkDimGeneric"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/SQL_Generic')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/scdT1Generic')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "This is a generalized Slowly Changing Dimension Type 1 that is parameterized to work against different dimension tables and dimension types.",
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "BlobInputFolder1",
+								"type": "DatasetReference"
+							},
+							"name": "NewMembers1"
+						},
+						{
+							"dataset": {
+								"referenceName": "ParameterTable1",
+								"type": "DatasetReference"
+							},
+							"name": "ExistingMembers"
+						},
+						{
+							"dataset": {
+								"referenceName": "ParameterTable1",
+								"type": "DatasetReference"
+							},
+							"name": "SetMaxKey"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ParameterTable1",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						},
+						{
+							"dataset": {
+								"referenceName": "ParameterTable1",
+								"type": "DatasetReference"
+							},
+							"name": "sink2"
+						}
+					],
+					"transformations": [
+						{
+							"name": "PickCols1"
+						},
+						{
+							"name": "PickCols2"
+						},
+						{
+							"name": "Lookup1"
+						},
+						{
+							"name": "checkMatch"
+						},
+						{
+							"name": "UpdateSetAttrs"
+						},
+						{
+							"name": "MapDrifted1",
+							"description": "Creates an explicit mapping for each drifted column"
+						},
+						{
+							"name": "isMatching"
+						},
+						{
+							"name": "AlterRow1"
+						},
+						{
+							"name": "SurrogateKey1"
+						},
+						{
+							"name": "InsertSetAttrs"
+						},
+						{
+							"name": "Join1"
+						},
+						{
+							"name": "SetCols"
+						}
+					],
+					"script": "parameters{\n\tdimname as string ('dimprods'),\n\tkeycol as string ('ProductNumber'),\n\tSurrogateKey as string ('ProductID'),\n\ttablename as string ('DimProducts')\n}\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinferDriftedColumnTypes: true) ~> NewMembers1\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinferDriftedColumnTypes: true,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> ExistingMembers\nsource(output(\n\t\tmaxsk as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tquery: (concat('select max(',$SurrogateKey,') as maxsk from ',$tablename)),\n\tformat: 'query') ~> SetMaxKey\nNewMembers1 derive(businesskey1 = toString(byPosition(2)),\n\t\tname1 = toString(byPosition(6))) ~> PickCols1\nExistingMembers derive(each(match(instr(name,'ID')>0), 'surrogatekey2' = toInteger($$)),\n\t\teach(match(instr(name,'Number')>0), 'businesskey2' = toString($$))) ~> PickCols2\nPickCols1, MapDrifted1 lookup(businesskey1 == businesskey2,\n\tmultiple: true,\n\tbroadcast: 'auto')~> Lookup1\nisMatching split(match,\n\tdisjoint: false) ~> checkMatch@(isMatch, noMatch)\ncheckMatch@isMatch derive({_LastUpdated} = currentTimestamp(),\n\t\tDWhash = sha2(256,name1)) ~> UpdateSetAttrs\nPickCols2 derive(ProductID = toInteger(byName('ProductID')),\n\t\tName = toString(byName('Name')),\n\t\tProductNumber = toString(byName('ProductNumber')),\n\t\tColor = toString(byName('Color')),\n\t\tStandardCost = toDecimal(byName('StandardCost')),\n\t\tListPrice = toDecimal(byName('ListPrice')),\n\t\t{_Inserted} = toTimestamp(byName('_Inserted')),\n\t\t{_LastUpdated} = toTimestamp(byName('_LastUpdated')),\n\t\tDWhash = toString(byName('DWhash')),\n\t\tsurrogatekey2 = toInteger(byName('surrogatekey2')),\n\t\tbusinesskey2 = toString(byName('businesskey2'))) ~> MapDrifted1\nLookup1 derive(match = isMatch()) ~> isMatching\nUpdateSetAttrs alterRow(updateIf(true())) ~> AlterRow1\ncheckMatch@noMatch keyGenerate(output(surrogatekey2 as long),\n\tstartAt: 1L) ~> SurrogateKey1\nJoin1 derive(surrogatekey2 = surrogatekey2 + maxsk,\n\t\t{_LastUpdated} = currentTimestamp(),\n\t\t{_Inserted} = currentTimestamp(),\n\t\tDWhash = sha2(256,name1)) ~> InsertSetAttrs\nSurrogateKey1, SetMaxKey join(true(),\n\tjoinType:'cross',\n\tbroadcast: 'auto')~> Join1\nInsertSetAttrs select(mapColumn(\n\t\tName = name1,\n\t\t{_Inserted},\n\t\t{_LastUpdated},\n\t\teach(match(name=='surrogatekey2'),\n\t\t\t$SurrogateKey+'' = $$),\n\t\teach(match(name=='businesskey1'),\n\t\t\t$keycol+'' = $$)\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SetCols\nAlterRow1 sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:false,\n\tupdateable:true,\n\tupsertable:false,\n\tkeys:[($keycol)],\n\tformat: 'table',\n\tmapColumn(\n\t\teach(patternMatch(`.*[^_]$`))\n\t),\n\tpartitionBy('hash', 1)) ~> sink1\nSetCols sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table') ~> sink2"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ParameterTable1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DL to DWH')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "DF_Product",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_SalesOrder",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "DF_Product",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_SalesOrder",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"SalesOrderDetailAbfs": {
+										"PathDate": {
+											"value": "@pipeline().parameters.PathDate",
+											"type": "Expression"
+										}
+									},
+									"SalesOrderHeaderAbfs": {
+										"PathDate": {
+											"value": "@pipeline().parameters.PathDate",
+											"type": "Expression"
+										}
+									},
+									"ProductDw": {},
+									"ProductAbfs": {},
+									"DestFtSalesOrder": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					}
+				],
+				"parameters": {
+					"PathDate": {
+						"type": "string",
+						"defaultValue": "2020/06/27"
+					}
+				},
+				"folder": {
+					"name": "Dataflow Meetup"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/DF_Product')]",
+				"[concat(variables('factoryId'), '/dataflows/DF_SalesOrder')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DL to DWH_11parallele')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "DF_Product",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_SalesOrder",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "DF_Product",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_SalesOrder",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"SalesOrderDetailAbfs": {
+										"PathDate": {
+											"value": "@pipeline().parameters.PathDate",
+											"type": "Expression"
+										}
+									},
+									"SalesOrderHeaderAbfs": {
+										"PathDate": {
+											"value": "@pipeline().parameters.PathDate",
+											"type": "Expression"
+										}
+									},
+									"ProductDw": {},
+									"ProductAbfs": {},
+									"DestFtSalesOrder": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy1",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy2",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy3",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy4",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy5",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy6",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy7",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy8",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy9",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy10",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy11",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy12",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy13",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy14",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy15",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy16",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy17",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy18",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy19",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy20",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					}
+				],
+				"parameters": {
+					"PathDate": {
+						"type": "string",
+						"defaultValue": "2020/06/27"
+					}
+				},
+				"folder": {
+					"name": "Dataflow Meetup"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/DF_Product')]",
+				"[concat(variables('factoryId'), '/dataflows/DF_SalesOrder')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DL to DWH_4parallele')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "DF_Product",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_SalesOrder",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "DF_Product_copy10",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_SalesOrder",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"SalesOrderDetailAbfs": {
+										"PathDate": {
+											"value": "@pipeline().parameters.PathDate",
+											"type": "Expression"
+										}
+									},
+									"SalesOrderHeaderAbfs": {
+										"PathDate": {
+											"value": "@pipeline().parameters.PathDate",
+											"type": "Expression"
+										}
+									},
+									"ProductDw": {},
+									"ProductAbfs": {},
+									"DestFtSalesOrder": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy1",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy2",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "DF_Product_copy1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy3",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "DF_Product_copy2",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy4",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy5",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "DF_Product_copy4",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy6",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "DF_Product_copy5",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy7",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy8",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "DF_Product_copy7",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy9",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "DF_Product_copy8",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					},
+					{
+						"name": "DF_Product_copy10",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "DF_Product",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 3,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Product",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ProductAbfs": {},
+									"ProductDw": {},
+									"DestDimProduct": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					}
+				],
+				"parameters": {
+					"PathDate": {
+						"type": "string",
+						"defaultValue": "2020/06/27"
+					}
+				},
+				"folder": {
+					"name": "Dataflow Meetup"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/DF_Product')]",
+				"[concat(variables('factoryId'), '/dataflows/DF_SalesOrder')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Generic SCD Type1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "https://techcommunity.microsoft.com/t5/Azure-Data-Factory/Create-Generic-SCD-Pattern-in-ADF-Mapping-Data-Flows/ba-p/918519",
+				"activities": [
+					{
+						"name": "Copy - Parquet",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"queryTimeout": "02:00:00"
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "SQL_AdventureWork",
+								"type": "DatasetReference",
+								"parameters": {
+									"table": {
+										"value": "@pipeline().parameters.tableName",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ABFS_Dyn",
+								"type": "DatasetReference",
+								"parameters": {
+									"FileName": {
+										"value": "@concat(pipeline().parameters.tableName,'.parquet')",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "LKP - Columns",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "Copy - Parquet",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "@concat('SELECT STRING_AGG(name,'','') AS [Columns] \nFROM sys.columns \nWHERE object_id = OBJECT_ID(''[dbo].[Dim'\n,pipeline().parameters.tableName\n,']'')\nAND column_id <> 1\nAND name <> ''Hash'''\n)",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00"
+							},
+							"dataset": {
+								"referenceName": "SQL_Generic",
+								"type": "DatasetReference",
+								"parameters": {
+									"TableName": "columns",
+									"TableSchema": "sys"
+								}
+							}
+						}
+					},
+					{
+						"name": "Generic_SCD1",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "LKP - Columns",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "Generic_SCD1",
+								"type": "DataFlowReference",
+								"parameters": {
+									"columns": "'ProductNumber,ProductName,Color,StandardCost,ListPrice,Size'",
+									"BusinessKey": "'ProductNumber'"
+								},
+								"datasetParameters": {
+									"SrcGeneric": {
+										"FileName": {
+											"value": "@concat(pipeline().parameters.tableName\n,'.parquet'\n)",
+											"type": "Expression"
+										}
+									},
+									"DimGeneric": {
+										"TableName": {
+											"value": "@concat('Dim'\n,pipeline().parameters.tableName\n)",
+											"type": "Expression"
+										},
+										"TableSchema": "dbo"
+									},
+									"sinkDimGeneric": {
+										"TableName": {
+											"value": "@concat('Dim'\n,pipeline().parameters.tableName\n)",
+											"type": "Expression"
+										},
+										"TableSchema": "dbo"
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							}
+						}
+					}
+				],
+				"parameters": {
+					"tableName": {
+						"type": "string",
+						"defaultValue": "Product"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/SQL_AdventureWork')]",
+				"[concat(variables('factoryId'), '/datasets/SQL_Generic')]",
+				"[concat(variables('factoryId'), '/dataflows/Generic_SCD1')]"
+			]
+		}
+	]
+}
