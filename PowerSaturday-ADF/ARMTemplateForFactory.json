@@ -30,6 +30,10 @@
 		"S3_Lake_properties_typeProperties_accessKeyId": {
 			"type": "string",
 			"defaultValue": "@{linkedService().S3AccessKeyId}"
+		},
+		"10Min_properties_Generic SCD Type1_parameters_tableName": {
+			"type": "string",
+			"defaultValue": "Product"
 		}
 	},
 	"variables": {
@@ -4841,7 +4845,9 @@
 							"referenceName": "Generic SCD Type1",
 							"type": "PipelineReference"
 						},
-						"parameters": {}
+						"parameters": {
+							"tableName": "[parameters('10Min_properties_Generic SCD Type1_parameters_tableName')]"
+						}
 					}
 				],
 				"type": "ScheduleTrigger",

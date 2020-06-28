@@ -6,6 +6,10 @@
 			"type": "string",
 			"metadata": "Data Factory name",
 			"defaultValue": "PowerSaturday-ADF"
+		},
+		"10Min_properties_Generic SCD Type1_parameters_tableName": {
+			"type": "string",
+			"defaultValue": "Product"
 		}
 	},
 	"variables": {
@@ -618,7 +622,9 @@
 							"referenceName": "Generic SCD Type1",
 							"type": "PipelineReference"
 						},
-						"parameters": {}
+						"parameters": {
+							"tableName": "[parameters('10Min_properties_Generic SCD Type1_parameters_tableName')]"
+						}
 					}
 				],
 				"type": "ScheduleTrigger",

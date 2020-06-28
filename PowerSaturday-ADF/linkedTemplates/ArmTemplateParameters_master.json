@@ -23,6 +23,9 @@
 		"S3_Lake_properties_typeProperties_accessKeyId": {
 			"value": "@{linkedService().S3AccessKeyId}"
 		},
+		"10Min_properties_Generic SCD Type1_parameters_tableName": {
+			"value": "Product"
+		},
 		"containerUri": {
 			"value": ""
 		},
