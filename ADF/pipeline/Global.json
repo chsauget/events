@@ -114,8 +114,11 @@
 		],
 		"parameters": {
 			"TableListFull": {
-				"type": "string",
-				"defaultValue": "Address,Customer,CustomerAddress,ProductCategory,ProductDescription,ProductModel,ProductModelProductDescription,SalesOrderDetail,SalesOrderHeader"
+				"type": "array",
+				"defaultValue": [
+					"SalesOrderDetail",
+					"SalesOrderHeader"
+				]
 			}
 		},
 		"variables": {
